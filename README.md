@@ -30,6 +30,6 @@ app.py
 File chính của giao diện người dùng, sử dụng Streamlit. Import và gọi các hàm từ src/fetch.py và src/process.py, sau đó hiển thị kết quả bằng biểu đồ và bảng dữ liệu.
  
 # Để code sạch hơn tránh xung đột tui mình sẽ code trên nhanh develop nha
-# Anh em nhập lệnh này vào teminal thì sao này anh em push lên code sẽ push lên nhanh develop nha sao khi code ổn định thì mình sẽ đưa nó về nhánh main 
+# Anh em nhập lệnh này vào teminal thì sao này anh em push lên code sẽ push lên nhánh develop nha sao khi code ổn định thì mình sẽ đưa nó về nhánh main 
 git fetch
 git checkout develop
