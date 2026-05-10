@@ -1,0 +1,39 @@
+{
+  "mhien1556": {
+    "password_hash": "702335ef8a334cdfe0e7c07e2c808e4463d783dc10cb3e46eade12045c3b77b0",
+    "salt": "ad054703970950ab5eb7f05920fa1f7e",
+    "display_name": "Nguyen Minh Hien",
+    "created_at": "2026-05-10T23:08:05.862209",
+    "favorite_cities": [],
+    "search_history": [
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-10T23:39:14.300581"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-10T23:37:38.283888"
+      },
+      {
+        "city": "Hanoi",
+        "time": "2026-05-10T23:35:18.797010"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-10T23:35:18.206828"
+      },
+      {
+        "city": "Ca mau",
+        "time": "2026-05-10T23:35:06.764210"
+      },
+      {
+        "city": "Ca mau",
+        "time": "2026-05-10T23:08:37.141943"
+      },
+      {
+        "city": "Ca mau",
+        "time": "2026-05-10T23:08:33.749132"
+      }
+    ]
+  }
+}
