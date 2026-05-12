@@ -32,6 +32,19 @@ BG_PRESETS = {
 current_bg = BG_PRESETS.get(st.session_state.bg_style, BG_PRESETS["Midnight"])
 accent = st.session_state.accent_color
 blur = st.session_state.glass_blur
+# Dynamic background
+if "temp_current" in st.session_state:
+    temp = st.session_state.temp_current
+    if temp >= 30:  # Ngưỡng nóng
+        current_bg = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" # Màu cam nắng
+    elif temp <= 20: # Ngưỡng lạnh
+        current_bg = "linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 100%)" # Màu trắng xanh tuyết
+        # Khi nền sáng (trắng xanh), ta cần đổi màu chữ sang tối để dễ đọc
+        text_color = "#1e293b" 
+    else:
+        text_color = "#e1e1e6" # Màu mặc định cho các nền tối
+else:
+    text_color = "#e1e1e6"
 
 # ── OpenWeatherMap-style CSS ───────────────────────────────────────────────────
 # ── AI-Inspired Glassmorphism CSS ─────────────────────────────────────────────
@@ -184,6 +197,12 @@ html,body,[class*="css"]{{font-family:'Outfit',sans-serif;}}
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}}
+
+ /*Dynamic background*/
+ .stApp {{
+    background: {current_bg}; 
+    color: {text_color};  /* Thay màu cố định bằng biến text_color */
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -353,6 +372,10 @@ def show_weather_page():
             raw_cur = get_current_weather(city)
             raw_fc = get_forecast_5days(city)
         cur = parse_current(raw_cur)
+        #Dynamic background
+        if st.session_state.temp_current != cur['temp']:
+            st.session_state.temp_current = cur['temp']
+            st.rerun() # Load
         df = parse_forecast(raw_fc)
         daily = get_daily_summary(df)
         lat, lon = cur["lat"], cur["lon"]

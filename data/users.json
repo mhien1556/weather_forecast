@@ -35,5 +35,38 @@
         "time": "2026-05-10T23:08:33.749132"
       }
     ]
+  },
+  "kiet": {
+    "password_hash": "03e22ec605ef3c3eab963d6f28229a121fd156aa8d7114e6ac87ebe49bc54f21",
+    "salt": "2f195a211690f1d2e79326b109001c6e",
+    "display_name": "KietDo",
+    "created_at": "2026-05-12T15:58:57.372808",
+    "favorite_cities": [],
+    "search_history": [
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-12T18:09:35.137823"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-12T17:43:27.384617"
+      },
+      {
+        "city": "Hanoi",
+        "time": "2026-05-12T16:04:00.029490"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-12T16:03:52.931169"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-12T16:00:04.955482"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-12T15:59:13.568840"
+      }
+    ]
   }
 }
