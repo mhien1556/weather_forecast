@@ -4,35 +4,92 @@
     "salt": "ad054703970950ab5eb7f05920fa1f7e",
     "display_name": "Nguyen Minh Hien",
     "created_at": "2026-05-10T23:08:05.862209",
-    "favorite_cities": [],
+    "favorite_cities": [
+      "Ca Mau",
+      "Hà Nội",
+      "Thành phố Hồ Chí Minh",
+      "Nha Trang"
+    ],
     "search_history": [
       {
-        "city": "Ho Chi Minh City",
-        "time": "2026-05-10T23:39:14.300581"
+        "city": "Ca Mau",
+        "time": "2026-05-13T15:56:03.010464"
       },
       {
-        "city": "Ho Chi Minh City",
-        "time": "2026-05-10T23:37:38.283888"
+        "city": "Ca Mau",
+        "time": "2026-05-13T15:30:46.951846"
       },
       {
-        "city": "Hanoi",
-        "time": "2026-05-10T23:35:18.797010"
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:30:38.918549"
       },
       {
-        "city": "Ho Chi Minh City",
-        "time": "2026-05-10T23:35:18.206828"
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:30:31.509443"
       },
       {
-        "city": "Ca mau",
-        "time": "2026-05-10T23:35:06.764210"
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:24:53.882066"
       },
       {
-        "city": "Ca mau",
-        "time": "2026-05-10T23:08:37.141943"
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:20:46.448362"
       },
       {
-        "city": "Ca mau",
-        "time": "2026-05-10T23:08:33.749132"
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:17:46.759236"
+      },
+      {
+        "city": "Thành phố Hồ Chí Minh",
+        "time": "2026-05-13T15:17:04.527129"
+      },
+      {
+        "city": "Nha Trang",
+        "time": "2026-05-13T15:09:36.284244"
+      },
+      {
+        "city": "Nha Trang",
+        "time": "2026-05-13T15:04:21.079159"
+      },
+      {
+        "city": "Nha Trang",
+        "time": "2026-05-13T15:02:34.098504"
+      },
+      {
+        "city": "Nha Trang",
+        "time": "2026-05-13T15:02:33.952844"
+      },
+      {
+        "city": "Nha Trang",
+        "time": "2026-05-13T15:02:22.428469"
+      },
+      {
+        "city": "Ho Chi Minh",
+        "time": "2026-05-13T15:02:11.108682"
+      },
+      {
+        "city": "Ho Chi Minh",
+        "time": "2026-05-13T15:02:10.963430"
+      },
+      {
+        "city": "Ho Chi Minh",
+        "time": "2026-05-13T15:02:02.240217"
+      },
+      {
+        "city": "Thanh pho hof chi minh",
+        "time": "2026-05-13T15:01:51.607124"
+      },
+      {
+        "city": "Ha noi",
+        "time": "2026-05-13T15:01:33.513894"
+      },
+      {
+        "city": "Ha noi",
+        "time": "2026-05-13T15:01:33.363890"
+      },
+      {
+        "city": "Ha noi",
+        "time": "2026-05-13T15:01:20.609111"
       }
     ]
   },
@@ -66,6 +123,32 @@
       {
         "city": "Ho Chi Minh City",
         "time": "2026-05-12T15:59:13.568840"
+      }
+    ]
+  },
+  "user1": {
+    "password_hash": "747c253bea4363a1c4999ae39ac78ec87740b86ae3a189dc59d964480242fb89",
+    "salt": "502230e6635e1a1bacb80e65593970e5",
+    "display_name": "user1",
+    "avatar": "🙂",
+    "created_at": "2026-05-13T15:26:32.787020",
+    "favorite_cities": [],
+    "search_history": [
+      {
+        "city": "Can Tho",
+        "time": "2026-05-13T15:26:54.368913"
+      },
+      {
+        "city": "Da Nang",
+        "time": "2026-05-13T15:26:54.003401"
+      },
+      {
+        "city": "Hanoi",
+        "time": "2026-05-13T15:26:53.562580"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "time": "2026-05-13T15:26:51.452645"
       }
     ]
   }
