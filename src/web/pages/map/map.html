@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ thời tiết | WeatherNow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="hero-bg">
+            {% set is_raining = weather and weather.icon and (weather.icon.startswith('09') or weather.icon.startswith('10') or weather.icon.startswith('11')) %}
+            {% set bg_image = '/static/images/weather_bg_2.png' if is_raining else '/static/images/weather_bg.png' %}
+            <img src="{{ bg_image }}" alt="Background" id="main-bg">
+            <div class="overlay"></div>
+        </div>
+
+        <nav class="navbar">
+            <div class="nav-left">
+                <a href="/" class="logo">WeatherNow</a>
+                <ul class="nav-links">
+                    <li><a href="/">Trang chủ</a></li>
+                    <li><a href="/forecast">Dự báo</a></li>
+                    <li><a href="/map" class="active">Bản đồ</a></li>
+                    <li><a href="/analysis">Phân tích</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-search">
+                <form action="/" method="GET" class="city-search-bar">
+                    <i data-lucide="search" style="width: 18px; color: rgba(255,255,255,0.5);"></i>
+                    <input type="text" name="city" placeholder="Tìm thành phố..." autocomplete="off">
+                </form>
+            </div>
+
+            <div class="nav-right">
+                <button class="icon-btn" title="Cài đặt"><i data-lucide="settings"></i></button>
+                <div class="profile-avatar" style="background: #e91e63; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                    MH
+                </div>
+            </div>
+        </nav>
+
+        <main class="map-page-wrapper">
+            <div class="map-container-full">
+                <div id="map"></div>
+
+                <!-- Floating Overlays -->
+                <div class="map-overlay map-search-float">
+                    <button class="round-icon-btn"><i data-lucide="search"></i></button>
+                </div>
+
+                <div class="map-overlay map-view-float">
+                    <button class="round-icon-btn"><i data-lucide="eye"></i></button>
+                </div>
+
+                <!-- Left Sidebar Menu -->
+                <div class="map-overlay map-sidebar-float">
+                    <div class="map-menu-card">
+                        <div class="map-menu-item active" onclick="setLayer('temp_new', this)">
+                            <i data-lucide="thermometer"></i>
+                            <span>Nhiệt độ</span>
+                        </div>
+                        <div class="map-menu-item" onclick="setLayer('pressure_new', this)">
+                            <i data-lucide="gauge"></i>
+                            <span>Áp suất</span>
+                        </div>
+                        <div class="map-menu-item" onclick="setLayer('wind_new', this)">
+                            <i data-lucide="wind"></i>
+                            <span>Tốc độ gió</span>
+                        </div>
+                        <div class="map-menu-item" onclick="setLayer('precipitation_new', this)">
+                            <i data-lucide="cloud-rain"></i>
+                            <span>Lượng mưa</span>
+                        </div>
+                        <div class="map-menu-item" onclick="setLayer('radar', this)">
+                            <i data-lucide="radio"></i>
+                            <span>Radar</span>
+                        </div>
+                        <div class="map-menu-item" onclick="setLayer('clouds_new', this)">
+                            <i data-lucide="cloud"></i>
+                            <span>Mây</span>
+                        </div>
+                        
+                        <div class="map-menu-divider"></div>
+                        
+                        <div class="map-menu-footer">
+                            <span>Hiệu ứng gió</span>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Left Timeline -->
+                <div class="map-overlay map-timeline-float">
+                    <div class="timeline-card">
+                        <button class="play-btn"><i data-lucide="play"></i></button>
+                        <div class="timeline-slider-container">
+                            <input type="range" class="timeline-slider" min="0" max="100" value="50">
+                            <div class="timeline-info">2026-05-16 13:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Right Legend -->
+                <div class="map-overlay map-legend-float">
+                    <div class="legend-card">
+                        <div class="legend-header">
+                            <span id="legend-label">Nhiệt độ</span>
+                            <span>-70°C ... 50°C</span>
+                        </div>
+                        <div class="legend-gradient"></div>
+                        <div class="legend-labels">
+                            <span>Thấp</span>
+                            <span>Trung bình</span>
+                            <span>Cao</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            const lat = {{ weather.lat if weather else 21.0285 }};
+            const lon = {{ weather.lon if weather else 105.8542 }};
+            const apiKey = "{{ api_key }}";
+            
+            let map = L.map('map', {
+                attributionControl: false,
+                zoomControl: false
+            }).setView([lat, lon], 5);
+
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+
+            let weatherLayer;
+            window.setLayer = function(layerName, element) {
+                if (weatherLayer) map.removeLayer(weatherLayer);
+                
+                // OpenWeatherMap Tiled Map Layers
+                if (layerName !== 'radar') {
+                    weatherLayer = L.tileLayer(`https://tile.openweathermap.org/map/${layerName}/{z}/{x}/{y}.png?appid=${apiKey}`, {
+                        opacity: 0.6
+                    }).addTo(map);
+                }
+
+                // Update UI
+                if (element) {
+                    document.querySelectorAll('.map-menu-item').forEach(el => el.classList.remove('active'));
+                    element.classList.add('active');
+                    document.getElementById('legend-label').innerText = element.querySelector('span').innerText;
+                }
+            };
+
+            setLayer('temp_new');
+
+            const markerIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="width: 12px; height: 12px; background: #ff5722; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px rgba(255, 87, 34, 0.8);"></div>',
+                iconSize: [12, 12]
+            });
+            L.marker([lat, lon], { icon: markerIcon }).addTo(map);
+        });
+    </script>
+</body>
+</html>

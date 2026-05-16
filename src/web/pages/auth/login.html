@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | WeatherNow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="hero-bg">
+            <img src="/static/images/weather_bg.png" alt="Background" id="main-bg">
+            <div class="overlay"></div>
+        </div>
+
+        <nav class="navbar">
+            <div class="nav-left">
+                <a href="/" class="logo">Weather<span>Now</span></a>
+            </div>
+            <div class="nav-right">
+                <a href="/" class="login-nav-btn">Quay lại</a>
+            </div>
+        </nav>
+
+        <main class="auth-container">
+            <div class="card auth-card">
+                <div class="auth-header">
+                    <h1>Chào mừng trở lại</h1>
+                    <p>Đăng nhập để lưu các thành phố yêu thích của bạn</p>
+                </div>
+                
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label>Tên đăng nhập</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user"></i>
+                            <input type="text" name="username" placeholder="Nhập tên đăng nhập..." required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" name="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Đăng nhập</button>
+                </form>
+
+                <div class="auth-footer">
+                    Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+            
+            const form = document.getElementById('login-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    window.location.href = '/';
+                } else {
+                    alert('Đăng nhập thất bại!');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

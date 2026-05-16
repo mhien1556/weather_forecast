@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân tích thời tiết | WeatherNow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="hero-bg">
+            {% set is_raining = weather and weather.icon and (weather.icon.startswith('09') or weather.icon.startswith('10') or weather.icon.startswith('11')) %}
+            {% set bg_image = '/static/images/weather_bg_2.png' if is_raining else '/static/images/weather_bg.png' %}
+            <img src="{{ bg_image }}" alt="Background" id="main-bg">
+            <div class="overlay"></div>
+        </div>
+
+        <nav class="navbar">
+            <div class="nav-left">
+                <a href="/" class="logo">WeatherNow</a>
+                <ul class="nav-links">
+                    <li><a href="/">Trang chủ</a></li>
+                    <li><a href="/forecast">Dự báo</a></li>
+                    <li><a href="/map">Bản đồ</a></li>
+                    <li><a href="/analysis" class="active">Phân tích</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-search">
+                <form action="/" method="GET" class="city-search-bar">
+                    <i data-lucide="search" style="width: 18px; color: rgba(255,255,255,0.5);"></i>
+                    <input type="text" name="city" placeholder="Tìm thành phố..." autocomplete="off">
+                </form>
+            </div>
+
+            <div class="nav-right">
+                <button class="icon-btn" title="Cài đặt"><i data-lucide="settings"></i></button>
+                <div class="profile-avatar" style="background: #e91e63; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                    MH
+                </div>
+            </div>
+        </nav>
+
+        <main class="content-wrapper">
+            <section class="city-search-section" style="display: flex; flex-direction: column; align-items: flex-start; margin-top: 2rem; margin-bottom: 2rem; padding-left: 1rem;">
+                <form id="city-search-form" class="city-search-bar" action="/analysis" method="GET" style="width: 100%;">
+                    <i data-lucide="search" class="search-icon" style="color: rgba(255, 255, 255, 0.5);"></i>
+                    <input id="city-search-input" name="city" type="text" placeholder="Hà Nội" autocomplete="off" value="{{ weather.city_name.split(',')[0] if weather else '' }}" style="color: #fff;">
+                    <button id="city-search-btn" type="submit" class="search-submit-btn">
+                        <span>Tìm</span>
+                    </button>
+                </form>
+            </section>
+
+            <header class="page-header" style="padding-left: 1rem; margin-bottom: 2rem;">
+                <h1>Phân tích chuyên sâu</h1>
+                <p>Xu hướng và thống kê khí tượng tại {{ weather.city_name if weather else 'N/A' }}</p>
+            </header>
+
+            <div class="analysis-grid">
+                <div class="analysis-row">
+                    <div class="card analysis-card">
+                        <h2>So sánh nhiệt độ (7 ngày)</h2>
+                        <div class="chart-container">
+                            {{ weather.charts.monthly|safe if weather and weather.charts else '' }}
+                        </div>
+                    </div>
+                    <div class="card analysis-card">
+                        <h2>Phân bổ chất lượng không khí</h2>
+                        <div class="chart-container">
+                            {{ weather.charts.aqi_dist|safe if weather and weather.charts else '' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card analysis-card">
+                    <h2>Xác suất hiện tượng thời tiết đặc biệt</h2>
+                    <div class="chart-container large" style="height: 350px;">
+                        {{ weather.charts.events|safe if weather and weather.charts else '' }}
+                    </div>
+                </div>
+
+                <div class="analysis-metrics">
+                    <div class="card stat-card">
+                        <span class="stat-label">Nhiệt độ trung bình</span>
+                        <span class="stat-value">{{ weather.stats.avg_temp if weather and weather.stats else '--' }}°C</span>
+                        <span class="stat-change up">+1.2° so với tuần trước</span>
+                    </div>
+                    <div class="card stat-card">
+                        <span class="stat-label">Tổng lượng mưa dự kiến</span>
+                        <span class="stat-value">{{ weather.stats.total_rain if weather and weather.stats else '--' }} mm</span>
+                        <span class="stat-change down">-15% so với tuần trước</span>
+                    </div>
+                    <div class="card stat-card">
+                        <span class="stat-label">Số giờ nắng dự kiến</span>
+                        <span class="stat-value">{{ weather.stats.sunny_days * 3 if weather and weather.stats else '--' }}h</span>
+                        <span class="stat-change up">+3h so với tuần trước</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

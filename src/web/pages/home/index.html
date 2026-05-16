@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherNow | Dự báo thời tiết hiện đại</title>
+    <meta name="description" content="Ứng dụng dự báo thời tiết với giao diện cinematic glassmorphism hiện đại.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="hero-bg">
+            <img src="/static/images/weather_bg.png" alt="Background" id="main-bg">
+            <div class="overlay"></div>
+        </div>
+
+        <nav class="navbar">
+            <div class="nav-left">
+                <a href="/" class="logo">WeatherNow</a>
+                <ul class="nav-links">
+                    <li><a href="/" class="active">Trang chủ</a></li>
+                    <li><a href="/forecast">Dự báo</a></li>
+                    <li><a href="/map">Bản đồ</a></li>
+                    <li><a href="/analysis">Phân tích</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-search">
+                <form action="/" method="GET" class="city-search-bar">
+                    <i data-lucide="search" style="width: 18px; color: rgba(255,255,255,0.5);"></i>
+                    <input type="text" name="city" placeholder="Tìm thành phố..." autocomplete="off">
+                </form>
+            </div>
+
+            <div class="nav-right">
+                <button class="icon-btn" title="Cài đặt"><i data-lucide="settings"></i></button>
+                <div class="profile-avatar" style="background: #e91e63; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                    MH
+                </div>
+            </div>
+        </nav>
+
+        <main class="content-wrapper">
+            <section class="city-search-section" style="display: flex; flex-direction: column; align-items: flex-start; margin-top: 2rem; margin-bottom: 4rem; padding-left: 1rem;">
+                <form id="city-search-form" class="city-search-bar" action="/" method="GET" style="width: 100%;">
+                    <i data-lucide="search" class="search-icon" style="color: rgba(255, 255, 255, 0.5);"></i>
+                    <input id="city-search-input" name="city" type="text" placeholder="Hà Nội" autocomplete="off" value="{{ weather.city_name.split(',')[0] if weather else '' }}" style="color: #fff;">
+                    <button id="city-search-btn" type="submit" class="search-submit-btn">
+                        <span>Tìm</span>
+                    </button>
+                </form>
+                <div class="quick-cities" style="margin-top: 1rem;">
+                    <span class="quick-label" style="font-size: 0.85rem; opacity: 0.7; margin-right: 0.5rem;">Gợi ý:</span>
+                    <a href="/?city=Hanoi" class="quick-city-btn" style="font-size: 0.85rem; padding: 0.3rem 1rem;">Hà Nội</a>
+                    <a href="/?city=Ho Chi Minh City" class="quick-city-btn" style="font-size: 0.85rem; padding: 0.3rem 1rem;">TP.HCM</a>
+                    <a href="/?city=Da Nang" class="quick-city-btn" style="font-size: 0.85rem; padding: 0.3rem 1rem;">Đà Nẵng</a>
+                </div>
+            </section>
+
+            <section class="hero-section" style="margin-bottom: 3.5rem; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 1rem;">
+                <div class="location-info" style="text-align: left;">
+                    <div class="location-header" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="map-pin" style="color: #fff; width: 24px; height: 24px;"></i>
+                        <h1 id="city-name" style="font-size: 2.8rem; font-weight: 700; color: #fff; margin: 0;">{{ weather.city_name if weather else 'N/A' }}</h1>
+                    </div>
+                    <p class="date-time" id="current-time" style="font-size: 1.1rem; opacity: 0.6; margin-top: 0.5rem; margin-left: 2rem;">{{ weather.date_str if weather else '' }}</p>
+                </div>
+
+                <div class="current-temp-large" style="text-align: right;">
+                    <div class="temp-row" style="display: flex; align-items: center; justify-content: flex-end; gap: 1.5rem;">
+                        <i data-lucide="{{ weather.lucide_icon if weather else 'cloud' }}" style="width: 80px; height: 80px; color: #fff;"></i>
+                        <span class="temp-value" style="font-size: 7rem; font-weight: 700; line-height: 1; color: #fff;">{{ weather.temp if weather else '--' }}°C</span>
+                    </div>
+                    <div class="condition-info" style="font-size: 1.4rem; margin-top: 0.25rem; opacity: 0.8; color: #fff;">
+                        <span class="condition-text">{{ weather.desc if weather else 'N/A' }}</span>
+                        <span class="divider" style="margin: 0 0.5rem;">•</span>
+                        <span class="feels-like">Cảm giác như {{ weather.feels_like if weather else '--' }}°C</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="metrics-grid">
+                <div class="metric-card">
+                    <i data-lucide="droplets"></i>
+                    <div class="metric-label">Độ ẩm</div>
+                    <div class="metric-value">{{ weather.humidity if weather else '--' }}%</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="wind"></i>
+                    <div class="metric-label">Gió</div>
+                    <div class="metric-value">{{ weather.wind if weather else '--' }} km/h</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="gauge"></i>
+                    <div class="metric-label">Áp suất</div>
+                    <div class="metric-value">{{ weather.pressure if weather else '--' }} hPa</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="eye"></i>
+                    <div class="metric-label">Tầm nhìn</div>
+                    <div class="metric-value">{{ weather.visibility if weather else '--' }} km</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="thermometer-snowflake"></i>
+                    <div class="metric-label">Điểm sương</div>
+                    <div class="metric-value">{{ weather.dew_point if weather else '--' }}°C</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="sunrise"></i>
+                    <div class="metric-label">Bình minh</div>
+                    <div class="metric-value">{{ weather.sunrise if weather else '--' }}</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="sunset"></i>
+                    <div class="metric-label">Hoàng hôn</div>
+                    <div class="metric-value">{{ weather.sunset if weather else '--' }}</div>
+                </div>
+                <div class="metric-card">
+                    <i data-lucide="sun"></i>
+                    <div class="metric-label">Chỉ số UV</div>
+                    <div class="metric-value">{{ weather.uv_index if weather.uv_index is not none else '0' }}</div>
+                </div>
+            </section>
+
+            <div class="dashboard-layout">
+                <div class="dashboard-main">
+                    <div class="card chart-card">
+                        <h2><i data-lucide="clock"></i> Dự báo theo giờ</h2>
+                        <div class="chart-container" style="height: 250px;">
+                            {{ weather.charts.hourly|safe if weather and weather.charts else '' }}
+                        </div>
+                    </div>
+
+                    <div class="trends-row">
+                        <div class="card chart-card">
+                            <h2><i data-lucide="trending-up"></i> Xu hướng nhiệt độ</h2>
+                            <div class="chart-container" style="height: 180px;">
+                                {{ weather.charts.temp_trend|safe if weather and weather.charts else '' }}
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <h2><i data-lucide="cloud-rain"></i> Khả năng kết tủa</h2>
+                            <div class="chart-container" style="height: 180px;">
+                                {{ weather.charts.precip|safe if weather and weather.charts else '' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card radar-card-main">
+                        <div class="radar-header">
+                            <h2 style="margin: 0;"><i data-lucide="map" style="color: #4facfe;"></i> Bản đồ vệ tinh</h2>
+                            <div class="radar-zoom-controls">
+                                <button class="zoom-btn" onclick="zoomHomeMap(1)" title="Phóng to">
+                                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                                </button>
+                                <button class="zoom-btn" onclick="zoomHomeMap(-1)" title="Thu nhỏ">
+                                    <i data-lucide="minus" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="radar-container" id="home-radar-map" style="height: 350px; background: #1a1c22; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-sidebar">
+                    <div class="card aqi-card">
+                        <h2><i data-lucide="wind"></i> Chất lượng không khí</h2>
+                        <div class="aqi-detailed">
+                            <div class="aqi-main">
+                                <div class="aqi-gauge-large" style="border-color: {{ weather.aqi.color if weather.aqi else '#4ade80' }};">
+                                    {{ weather.aqi.val if weather.aqi else '--' }}
+                                </div>
+                                <div class="aqi-status-text">
+                                    <span class="aqi-status-badge" style="background: {{ (weather.aqi.color if weather.aqi else '#4ade80') }}22; color: {{ weather.aqi.color if weather.aqi else '#4ade80' }};">
+                                        {{ weather.aqi.label if weather.aqi else 'Tốt' }}
+                                    </span>
+                                    <p class="aqi-status-desc">{{ weather.aqi.desc if weather.aqi else 'Không khí trong lành.' }}</p>
+                                </div>
+                            </div>
+                            <div class="aqi-pollutants">
+                                <div class="pollutant-item">
+                                    <div class="pollutant-info">
+                                        <span class="pollutant-name">PM2.5</span>
+                                        <span class="pollutant-val">{{ weather.aqi.pm25 if weather.aqi else '12.5' }} µg/m³</span>
+                                    </div>
+                                    <div class="pollutant-bar">
+                                        <div class="pollutant-fill" style="width: {{ weather.aqi.pm25_pct if weather.aqi else '15' }}%;"></div>
+                                    </div>
+                                </div>
+                                <div class="pollutant-item">
+                                    <div class="pollutant-info">
+                                        <span class="pollutant-name">Carbon Monoxit</span>
+                                        <span class="pollutant-val">{{ weather.aqi.co if weather.aqi else '320.1' }} µg/m³</span>
+                                    </div>
+                                    <div class="pollutant-bar">
+                                        <div class="pollutant-fill" style="width: {{ weather.aqi.co_pct if weather.aqi else '25' }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card forecast-sidebar">
+                        <h2><i data-lucide="calendar"></i> Dự báo 7 ngày</h2>
+                        <div class="forecast-7day-list">
+                            {% if weather and weather.daily %}
+                                {% for day in weather.daily[:7] %}
+                                <div class="forecast-row">
+                                    <span class="forecast-day">{{ 'Hôm nay' if loop.first else day.day_name }}</span>
+                                    <div class="forecast-icon-box">
+                                        <i data-lucide="{{ day.lucide_icon }}" style="width: 20px; height: 20px;"></i>
+                                        <span style="font-size: 0.8rem; opacity: 0.6;">{{ day.pop_max }}%</span>
+                                    </div>
+                                    <div class="forecast-temps">
+                                        <strong>{{ day.temp_max|round|int }}°</strong>
+                                        <span class="min">{{ day.temp_min|round|int }}°</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p style="opacity: 0.5; font-size: 0.9rem;">Dữ liệu không khả dụng.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-container">
+                <!-- Cột giới thiệu bên trái -->
+                <div class="footer-brand">
+                    <span class="footer-logo">WeatherNow</span>
+                    <p>Giải pháp theo dõi thời tiết thông minh, cung cấp dữ liệu chính xác và trực quan cho mọi điểm đến trên thế giới.</p>
+                </div>
+
+                <!-- Các cột liên kết bên phải -->
+                <div class="footer-column">
+                    <h4>Sản phẩm</h4>
+                    <ul class="footer-list">
+                        <li><a href="/">Trang chủ</a></li>
+                        <li><a href="/forecast">Dự báo chi tiết</a></li>
+                        <li><a href="/map">Bản đồ vệ tinh</a></li>
+                        <li><a href="/analysis">Phân tích chuyên sâu</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Hỗ trợ</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">Dữ liệu API</a></li>
+                        <li><a href="#">Báo cáo lỗi</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Liên hệ</h4>
+                    <ul class="footer-list">
+                        <li><a href="mailto:support@weathernow.vn">support@weathernow.vn</a></li>
+                        <li><a href="#">Văn phòng đại diện</a></li>
+                        <li><a href="#">Hợp tác kinh doanh</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Dòng bản quyền dưới cùng -->
+            <div class="footer-bottom">
+                <p class="footer-copy">© 2026 WeatherNow Inc. Thiết kế bởi Minh Hiển.</p>
+            </div>
+        </footer>
+
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Cài đặt</h2>
+                    <button class="close-modal" onclick="closeModal('settings-modal')"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <label>Đơn vị nhiệt độ</label>
+                        <div class="setting-options">
+                            <button class="option-btn active">Celsius (°C)</button>
+                            <button class="option-btn">Fahrenheit (°F)</button>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Đơn vị khoảng cách</label>
+                        <div class="setting-options">
+                            <button class="option-btn active">Kilomet (km)</button>
+                            <button class="option-btn">Dặm (mi)</button>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Ngôn ngữ</label>
+                        <div class="setting-options">
+                            <button class="option-btn active">Tiếng Việt</button>
+                            <button class="option-btn">English</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Profile Modal -->
+        <div class="modal-overlay" id="profile-modal">
+            <div class="modal-content user-profile-modal">
+                <div class="modal-header">
+                    <div style="width: 24px;"></div> <!-- Spacer -->
+                    <h2>Tài khoản</h2>
+                    <button class="close-modal" onclick="closeModal('profile-modal')"><i data-lucide="x"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-img-large">MH</div>
+                    <h3 class="user-name">Minh Hiển</h3>
+                    <p class="user-email">minhhien@weathernow.vn</p>
+                    <button class="logout-btn" onclick="location.href='/logout'">
+                        <i data-lucide="log-out"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet CSS & JS for the radar map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let homeRadarMap;
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function zoomHomeMap(delta) {
+            if (homeRadarMap) {
+                const currentZoom = homeRadarMap.getZoom();
+                homeRadarMap.setZoom(currentZoom + delta);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+            
+            // Modal Triggers
+            document.querySelector('.icon-btn[title="Cài đặt"]').onclick = () => openModal('settings-modal');
+            document.querySelector('.profile-avatar').onclick = () => openModal('profile-modal');
+
+            // Close modals on overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) closeModal(overlay.id);
+                };
+            });
+
+            // Initialize Home Radar Map
+            const lat = {{ weather.lat if weather else 21.0285 }};
+            const lon = {{ weather.lon if weather else 105.8542 }};
+            const apiKey = "{{ api_key }}";
+            
+            if (document.getElementById('home-radar-map')) {
+                homeRadarMap = L.map('home-radar-map', {
+                    attributionControl: false,
+                    zoomControl: false,
+                    scrollWheelZoom: false
+                }).setView([lat, lon], 8);
+
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(homeRadarMap);
+                
+                L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${apiKey}`, {
+                    opacity: 0.6
+                }).addTo(homeRadarMap);
+
+                const markerIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="width: 12px; height: 12px; background: #ff5722; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 15px rgba(255, 87, 34, 0.8);"></div>',
+                    iconSize: [12, 12]
+                });
+                L.marker([lat, lon], { icon: markerIcon }).addTo(homeRadarMap);
+            }
+
+            // Background Parallax Effect
+            const mainBg = document.getElementById('main-bg');
+            if (mainBg) {
+                window.addEventListener('mousemove', (e) => {
+                    const moveX = (e.clientX - window.innerWidth / 2) * 0.005;
+                    const moveY = (e.clientY - window.innerHeight / 2) * 0.005;
+                    mainBg.style.transform = `scale(1.05) translate(${moveX}px, ${moveY}px)`;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
