@@ -1,11 +1,8 @@
 """
-WeatherNow — Flask server (giao diện HTML + API).
+WeatherNow — Ứng dụng dự báo thời tiết (100% Python + NiceGUI).
 
 Chạy:  python server.py
 Mở:    http://localhost:5000
-
-Giao diện nằm trong src/web/templates/ và src/web/static/
-Logic trang: src/web/pages/  ↔  src/ui/*_page.py
 """
 
 import os
@@ -19,14 +16,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.web.app import create_app
+from src.app import run
 
-app = create_app()
-
-if __name__ == "__main__":
-    print("WeatherNow: http://localhost:5000")
-    print("  /          - Home")
-    print("  /forecast  - Forecast")
-    print("  /map         - Map")
-    print("  /analysis    - Analysis")
-    app.run(debug=True, port=5000)
+if __name__ == '__main__':
+    print('WeatherNow (Python + NiceGUI): http://localhost:5000')
+    print('  /          - Home')
+    print('  /forecast  - Forecast')
+    print('  /map       - Map')
+    print('  /analysis  - Analysis')
+    run()
