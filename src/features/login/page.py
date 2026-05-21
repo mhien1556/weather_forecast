@@ -1,6 +1,6 @@
 from nicegui import ui
 
-from src.common.components import apply_theme, footer, hero_background, navbar
+from src.common.components import apply_theme, hero_background, navbar
 from .widgets import render_login_content
 
 def register():
@@ -12,7 +12,9 @@ def register():
             hero_background(None)
             navbar('/login')
             
-            with ui.element('div').classes('page-content content-wrapper'):
+            # Không dùng content-wrapper để card căn giữa toàn màn hình
+            with ui.element('div').style(
+                'display:flex; align-items:center; justify-content:center;'
+                'min-height:calc(100vh - 70px); padding: 2rem; box-sizing:border-box;'
+            ):
                 render_login_content()
-                
-            footer()

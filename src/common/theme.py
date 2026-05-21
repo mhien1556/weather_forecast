@@ -306,4 +306,100 @@ div { box-sizing: border-box; }
     .temp-value { font-size: 4rem; }
     .analysis-metrics { grid-template-columns: 1fr; }
 }
+/* ── Nút Đăng nhập navbar ─────────────────────────────── */
+.q-btn-login {
+    background: rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    border-radius: 999px !important;
+    font-weight: 600 !important;
+    padding: 0.4rem 1.2rem !important;
+}
+.q-btn-login:hover {
+    background: rgba(255,255,255,0.15) !important;
+    border-color: rgba(255,255,255,0.4) !important;
+}
+
+/* ── User menu dropdown ───────────────────────────────── */
+.user-menu-wrapper { position: relative; }
+
+.user-dropdown-menu {
+    background: rgba(18,20,28,0.97) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 16px !important;
+    padding: 0.5rem !important;
+    min-width: 230px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
+}
+
+.user-menu-header {
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.user-menu-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #e91e63, #9c27b0);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; flex-shrink: 0;
+}
+
+.user-menu-item {
+    border-radius: 10px !important;
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.9rem !important;
+}
+.user-menu-item:hover {
+    background: rgba(255,255,255,0.07) !important;
+    color: #fff !important;
+}
+.user-menu-logout { color: #f87171 !important; }
+.user-menu-logout:hover { background: rgba(239,68,68,0.1) !important; }
+
+/* ── Auth tab switcher ────────────────────────────────── */
+.auth-tab {
+    border-radius: 8px !important;
+    color: rgba(255,255,255,0.5) !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+}
+.auth-tab-active {
+    background: rgba(255,255,255,0.1) !important;
+    color: #fff !important;
+}
+
+/* ── Analysis KPI row ─────────────────────────────────── */
+.analysis-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.kpi-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem;
+    transition: transform 0.3s, background 0.3s;
+}
+.kpi-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.08) !important; }
+
+/* ── Analysis bottom section ──────────────────────────── */
+.analysis-bottom {
+    display: grid !important;
+    grid-template-columns: 1fr 2fr !important;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .analysis-kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+    .analysis-bottom { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 600px) {
+    .analysis-kpi-row { grid-template-columns: 1fr 1fr !important; }
+}
 """

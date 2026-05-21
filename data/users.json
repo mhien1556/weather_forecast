@@ -1,0 +1,24 @@
+{
+  "hieu576": {
+    "username": "hieu576",
+    "name": "Nguyễn Trung Hiếu",
+    "email": "nguyentrunghieu0609006@gmail.com",
+    "password": "ebcc0472ddc05e95ad6fa41f06f72c8ed9bc48f72e0f2384d10fc86a114ff9f5",
+    "avatar": "N",
+    "security_question": "",
+    "security_answer": ""
+  },
+  "hieu5768": {
+    "username": "hieu5768",
+    "name": "Nguyễn Trung Hiếu",
+    "email": "abc@gmail.com",
+    "password": "903b47061c8ea3ead29321a2c2e17d7f1254d970112dfd9460e80187333b2968",
+    "avatar": "N",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
+    "history": [],
+    "favorites": [
+      "sydney"
+    ]
+  }
+}
