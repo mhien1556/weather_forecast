@@ -12,3 +12,23 @@ def get_data(api_key: str, city: str = 'Hanoi') -> dict:
         return processed
     except Exception as e:
         return {'error': str(e)}
+
+
+# Add function to fetch weather data for a specific time and layer
+def get_weather_by_time_and_layer(api_key: str, lat: float, lon: float, layer: str, time_offset: int) -> dict:
+    try:
+        # Simulate fetching weather data for a specific time and layer
+        # Replace with actual API logic if available
+        return {
+            'layer': layer,
+            'time_offset': time_offset,
+            'data': {
+                'temperature': 25 + time_offset * 0.5,
+                'rain': 2.5,
+                'wind_speed': 10 + time_offset * 0.2,
+                'pressure': 1010 - time_offset * 0.1,
+                'clouds': 50 + time_offset * 2,
+            }
+        }
+    except Exception as e:
+        return {'error': str(e)}

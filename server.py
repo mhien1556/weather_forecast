@@ -25,3 +25,4 @@ if __name__ == '__main__':
     print('  /map       - Map')
     print('  /analysis  - Analysis')
     run()
+
