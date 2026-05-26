@@ -42,45 +42,41 @@ def render_forecast_page(weather: dict):
             ui.label(f'Thông tin khí tượng chuyên sâu 7 ngày tới tại {city_name}, Việt Nam').classes('opacity-75 text-sm')
 
         # ===== HỆ THỐNG THẺ CARD 7 NGÀY =====
-        with ui.element('div').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:0.75rem;width:100%;margin-bottom:1.5rem'):
+        with ui.element('div').classes('grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 w-full'):
             for idx, day in enumerate(daily_list[:7]):
                 day_name = day.get('day_name', f'Ngày {idx+1}')
                 display_name = 'Hôm nay' if idx == 0 else day_name
                 
-                # ✅ Kiểm tra xem thẻ có được chọn không
                 is_selected = (selected_day_index.value == idx)
                 card_style = (
-                    'border:2px solid #4facfe;background:rgba(79,172,254,0.15);'
+                    'border: 2px solid #4facfe; background: rgba(79, 172, 254, 0.15);' 
                     if is_selected 
-                    else 'border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);'
+                    else 'border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);'
                 )
 
-                # ✅ Tạo card tương tác
-                with ui.element('div').classes('p-3 flex flex-col items-center gap-2 cursor-pointer rounded-xl text-center') \
-                        .style(f'{card_style}transition:all 0.2s ease;') \
+                with ui.card().classes('p-3 flex flex-col items-center gap-2 cursor-pointer transition-all duration-200 hover:scale-[1.03] rounded-xl text-center') \
+                        .style(card_style) \
                         .on('click', lambda _, i=idx: selected_day_index.set_value(i)):
                     
-                    ui.label(display_name).style('font-size:0.75rem;font-weight:600;text-transform:uppercase;color:rgba(255,255,255,0.8)')
-                    ui.label(day.get('date', '')[5:]).style('font-size:0.7rem;opacity:0.5;margin-top:-0.5rem')
+                    ui.label(display_name).classes('text-xs font-semibold uppercase text-white/80')
+                    ui.label(day.get('date', '')[5:].replace('-', '/')).classes('text-[0.7rem] opacity-50 -mt-2')
                     
-                    ui.icon(lucide_to_material(day.get('lucide_icon', 'cloud'))).style('font-size:32px;color:#fff')
+                    ui.icon(lucide_to_material(day.get('lucide_icon', 'cloud'))).style('font-size: 32px; color: #fff;')
                     
-                    # Nhiệt độ max/min
                     with ui.row().classes('gap-2 justify-center text-xs mt-1'):
-                        ui.label(f"{round(day.get('temp_max', 0))}°").style('font-weight:700;color:#fff')
-                        ui.label(f"{round(day.get('temp_min', 0))}°").style('opacity:0.6')
+                        ui.label(f"{round(day.get('temp_max', 0))}°").classes('font-bold text-white')
+                        ui.label(f"{round(day.get('temp_min', 0))}°").classes('opacity-60')
                     
-                    # Khả năng mưa
-                    with ui.row().classes('items-center gap-1').style('opacity:0.7;font-size:0.7rem'):
-                        ui.icon('umbrella').style('font-size:11px;color:#3b82f6')
+                    with ui.row().classes('items-center gap-0.5 opacity-70 text-[0.7rem]'):
+                        ui.icon('umbrella').style('font-size: 11px; color: #3b82f6')
                         ui.label(f"{day.get('pop_max', 0)}%")
 
-        # ===== KHU VỰC PHÂN TÍCH SÂU CHO NGÀY ĐƯỢC CHỌN =====
+        # ===== PHẦN PHÂN TÍCH: TRỢ LÝ + BIỂU ĐỒ CHI TIẾT =====
         current_selected_data = daily_list[selected_day_index.value]
         
-        with ui.element('div').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;width:100%;margin-top:1rem'):
+        with ui.element('div').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;width:100%;margin-top:2rem'):
             
-            # ===== KHỐI 1: TRỢ LÝ THỜI TIẾT =====
+            # KHỐI 1: TRỢ LÝ THỜI TIẾT
             with ui.element('div').classes('card').style('padding:1.25rem;display:flex;flex-direction:column;gap:1rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;justify-content:space-between'):
                 with ui.column().classes('gap-1'):
                     with ui.row().classes('items-center gap-2').style('color:#4facfe;margin-bottom:0.5rem'):
@@ -90,17 +86,33 @@ def render_forecast_page(weather: dict):
                     ui.label(f"Nhận xét ngày {current_selected_data.get('day_name')}:").style('font-size:0.75rem;font-weight:600;opacity:0.6;text-transform:uppercase')
                     ui.label(current_selected_data.get('desc', 'Bầu trời thay đổi')).style('font-size:1.25rem;font-weight:700;color:#fff')
                 
-                # ✅ Khuyến nghị thông minh
                 recommendation = generate_weather_insight(current_selected_data)
                 with ui.element('div').style('padding:0.75rem;background:rgba(255,255,255,0.05);border-radius:0.5rem;border:1px solid rgba(255,255,255,0.05)'):
                     ui.label(recommendation).style('font-size:0.875rem;line-height:1.5;color:#93c5fd')
 
-            # ===== KHỐI 2: BIỂU ĐỒ LIÊN TUẦN =====
+            # KHỐI 2: BIỂU ĐỒ CHI TIẾT (Max/Min)
             with ui.element('div').classes('card').style('padding:1.25rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem'):
                 with ui.row().classes('items-center gap-2').style('margin-bottom:0.5rem'):
-                    ui.icon('analytics')
-                    ui.label('Phân tích biến thiên 7 ngày').style('font-size:1.125rem;margin:0;font-weight:600')
+                    ui.icon('thermostat')
+                    ui.label('Chi tiết - Cao nhất & Thấp nhất').style('font-size:1rem;margin:0;font-weight:600')
+                plotly_chart(charts.get('detailed'))
+
+        # ===== PHẦN BIỂU ĐỒ: 2 CHART TOÀN TUẦN (Trend + Precip) =====
+        with ui.element('div').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:1rem;width:100%;margin-top:2rem'):
+            
+            # BIỂU ĐỒ: Xu hướng nhiệt độ
+            with ui.element('div').classes('card').style('padding:1.25rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem'):
+                with ui.row().classes('items-center gap-2').style('margin-bottom:0.5rem'):
+                    ui.icon('trending_up')
+                    ui.label('Xu hướng - Biến thiên nhiệt độ 7 ngày').style('font-size:1rem;margin:0;font-weight:600')
                 plotly_chart(charts.get('temp_trend'))
+            
+            # BIỂU ĐỒ: Lượng mưa
+            with ui.element('div').classes('card').style('padding:1.25rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem'):
+                with ui.row().classes('items-center gap-2').style('margin-bottom:0.5rem'):
+                    ui.icon('cloud_queue')
+                    ui.label('Lượng mưa - Khả năng xuất hiện mưa 7 ngày').style('font-size:1rem;margin:0;font-weight:600')
+                plotly_chart(charts.get('precip'))
 
 
 def render_daily_cards(daily: list):
