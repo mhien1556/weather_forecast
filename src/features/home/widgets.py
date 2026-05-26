@@ -43,35 +43,22 @@ def render_dashboard(weather: dict):
     lon = weather.get('lon', 105.8542)
 
     with ui.element('div').classes('dashboard-layout gap-4 flex flex-col md:flex-row w-full'):
-        # Main content area
+        # VÙNG HIỂN THỊ CHÍNH (MAIN)
         with ui.element('div').classes('dashboard-main flex-1 flex flex-col gap-4'):
-            # Hourly Chart
+            
+            # Dự báo theo giờ (Giữ lại vì hỗ trợ trực tiếp thông tin trong ngày)
             with ui.element('div').classes('card chart-card'):
                 with ui.row().classes('items-center gap-2 mb-4'):
                     ui.icon('schedule')
-                    ui.label('Dự báo theo giờ').classes('text-h6 m-0')
+                    ui.label('Dự báo chi tiết trong ngày').classes('text-h6 m-0')
                 plotly_chart(charts.get('hourly'))
 
-            # Trends Row (Nhiệt độ & Lượng mưa)
-            with ui.element('div').classes('trends-row flex flex-wrap gap-4 w-full'):
-                with ui.element('div').classes('card chart-card flex-1 min-w-[300px]'):
-                    with ui.row().classes('items-center gap-2 mb-4'):
-                        ui.icon('trending_up')
-                        ui.label('Xu hướng nhiệt độ').classes('text-h6 m-0')
-                    plotly_chart(charts.get('temp_trend'))
-                    
-                with ui.element('div').classes('card chart-card flex-1 min-w-[300px]'):
-                    with ui.row().classes('items-center gap-2 mb-4'):
-                        ui.icon('grain')
-                        ui.label('Khả năng kết tủa').classes('text-h6 m-0')
-                    plotly_chart(charts.get('precip'))
-
-            # Satellite Radar Map
+            # Bản đồ vệ tinh thời gian thực
             with ui.element('div').classes('card radar-card-main h-[400px]'):
                 with ui.element('div').classes('radar-header'):
                     with ui.row().classes('items-center gap-2'):
                         ui.icon('map').style('color:#4facfe')
-                        ui.label('Bản đồ vệ tinh').classes('m-0 font-semibold')
+                        ui.label('Bản đồ mây vệ tinh & Lượng mưa').classes('m-0 font-semibold')
                         
                 with ui.element('div').classes('radar-container h-[calc(100%-60px)]'):
                     m = ui.leaflet(center=(lat, lon), zoom=8, options={'zoomControl': False}).classes('w-full h-full')
@@ -86,11 +73,19 @@ def render_dashboard(weather: dict):
                         )
                     m.marker(latlng=(lat, lon))
                    
-        # Sidebar area
+        # THANH BÊN (SIDEBAR)
         with ui.element('div').classes('dashboard-sidebar w-full md:w-[320px] shrink-0 flex flex-col gap-4'):
+            # Chất lượng không khí thực tế
             render_aqi_card(aqi)
-            render_forecast_sidebar(weather.get('daily', []))
-
+            
+            # Thay thế danh sách 7 ngày lặp lại bằng một Banner điều hướng thông minh
+            with ui.element('div').classes('card flex flex-col gap-3 justify-between items-center p-5 text-center bg-gradient-to-br from-blue-500/10 to-transparent rounded-xl border border-white/10'):
+                ui.icon('calendar_month').style('font-size: 42px; color: #4facfe')
+                with ui.column().classes('gap-1'):
+                    ui.label('Lên kế hoạch tuần mới?').classes('text-lg font-bold text-white')
+                    ui.label('Xem ngay phân tích dự báo xu hướng thời tiết 7 ngày tới với biểu đồ thông minh.').classes('text-xs opacity-70')
+                # Nút nhấn chuyển trang sang tab /forecast
+                ui.button('Xem Dự Báo 7 Ngày', on_click=lambda: ui.navigate.to('/forecast')).classes('w-full bg-[#4facfe] text-white font-medium rounded-lg py-2 shadow-md hover:opacity-90')
 
 def render_aqi_card(aqi: dict):
     color = aqi.get('color', '#4ade80')
