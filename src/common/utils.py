@@ -113,13 +113,18 @@ def parse_hourly(forecast_list, limit=8):
     if not forecast_list:
         return []
     result = []
+    from datetime import datetime as _dt
     for item in forecast_list[:limit]:
+        # Lấy giờ thực tế từ dt_txt
+        dt_obj = _dt.strptime(item['dt_txt'], '%Y-%m-%d %H:%M:%S')
+        time_str = dt_obj.strftime('%H:%M')
         result.append({
-            'time': item['dt_txt'].split(' ')[1][:5],
+            'time': time_str,
             'temp': round(item['main']['temp']),
             'pop': round(item.get('pop', 0) * 100),
             'icon': item['weather'][0]['icon'],
             'lucide_icon': icon_to_lucide(item['weather'][0]['icon']),
+            'dt': item.get('dt', 0),
         })
     return result
 

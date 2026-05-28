@@ -17,8 +17,109 @@
     "security_question": "Tên thú cưng đầu tiên của bạn?",
     "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
     "history": [],
+    "favorites": []
+  },
+  "StarH": {
+    "username": "StarH",
+    "name": "Nguyen Hieu",
+    "email": "xyz@gmai.com",
+    "password": "6fda71f9f1fbe92dcc03938ee0c568d95596e59230d954b4b9eb48ac30ee3fef",
+    "avatar": "N",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
+    "favorites": [],
+    "history": [],
+    "notifications": {
+      "rain": true,
+      "extreme": true,
+      "daily": false
+    }
+  },
+  "StarH6": {
+    "username": "StarH6",
+    "name": "Hieu Nguyen",
+    "email": "awsd@.com",
+    "password": "6fda71f9f1fbe92dcc03938ee0c568d95596e59230d954b4b9eb48ac30ee3fef",
+    "avatar": "H",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
+    "favorites": [],
+    "history": [],
+    "notifications": {
+      "rain": true,
+      "extreme": true,
+      "daily": false
+    }
+  },
+  "Star5768": {
+    "username": "Star5768",
+    "name": "Hieu Nguyen",
+    "email": "hieunguyen@gmail.com",
+    "password": "6fda71f9f1fbe92dcc03938ee0c568d95596e59230d954b4b9eb48ac30ee3fef",
+    "avatar": "H",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "a5b156f47cfc90f70781d771e3809af7b184b868ef87a7184b1b0fb4aac6f8b6",
+    "favorites": [],
+    "history": [],
+    "notifications": {
+      "rain": true,
+      "extreme": true,
+      "daily": false
+    }
+  },
+  "StarH7": {
+    "username": "StarH7",
+    "name": "Hieu Nguyen",
+    "email": "hieunguyen@gmail.com",
+    "password": "ebcc0472ddc05e95ad6fa41f06f72c8ed9bc48f72e0f2384d10fc86a114ff9f5",
+    "avatar": "H",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
+    "favorites": [],
+    "history": [
+      {
+        "city": "Ho Chi Minh City",
+        "brief": "",
+        "time": "26/05/2026 17:23"
+      },
+      {
+        "city": "Hanoi",
+        "brief": "",
+        "time": "26/05/2026 17:22"
+      },
+      {
+        "city": "new york",
+        "brief": "",
+        "time": "26/05/2026 16:33"
+      },
+      {
+        "city": "newyork",
+        "brief": "",
+        "time": "26/05/2026 16:33"
+      }
+    ],
+    "notifications": {
+      "rain": true,
+      "extreme": true,
+      "daily": false
+    }
+  },
+  "Star": {
+    "username": "Star",
+    "name": "Hieu Nguyen",
+    "email": "abc@gmail.com",
+    "password": "ebcc0472ddc05e95ad6fa41f06f72c8ed9bc48f72e0f2384d10fc86a114ff9f5",
+    "avatar": "H",
+    "security_question": "Tên thú cưng đầu tiên của bạn?",
+    "security_answer": "6d8bf85786deb929fe2a920bb3b81bdc07cdff5aa3ec03a4e794437803069ea1",
     "favorites": [
-      "sydney"
-    ]
+      "Hồ Chí Minh"
+    ],
+    "history": [],
+    "notifications": {
+      "rain": true,
+      "extreme": true,
+      "daily": false
+    }
   }
 }

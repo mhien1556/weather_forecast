@@ -278,9 +278,10 @@ def render_login_content():
                     r_question.value, r_answer.value,
                 )
                 if user:
-                    set_current_user(user)
-                    ui.notify(f'Tạo tài khoản thành công! Chào {user["name"]} 🎉', type='positive', position='top')
-                    ui.navigate.to('/')
+                    r_name.set_value(''); r_user.set_value('')
+                    r_email.set_value(''); r_pass.set_value(''); r_answer.set_value('')
+                    _switch('login')
+                    _show_suc(suc, '✅ Tạo tài khoản thành công! Hãy đăng nhập.')
                 else:
                     _show_err(err, '❌ Tên đăng nhập đã tồn tại!')
 

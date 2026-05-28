@@ -132,6 +132,9 @@ def add_history(username: str, city: str, weather_brief: str = '') -> None:
 
 def get_history(username: str) -> list:
     users = _load()
+    if username in users and 'history' not in users[username]:
+        users[username]['history'] = []
+        _save(users)
     return users.get(username, {}).get('history', [])
 
 
@@ -145,6 +148,9 @@ def clear_history(username: str) -> None:
 # ── Thành phố yêu thích ───────────────────────────────────────
 def get_favorites(username: str) -> list:
     users = _load()
+    if username in users and 'favorites' not in users[username]:
+        users[username]['favorites'] = []
+        _save(users)
     return users.get(username, {}).get('favorites', [])
 
 
@@ -170,7 +176,11 @@ def remove_favorite(username: str, city: str) -> None:
 # ── Cài đặt thông báo ─────────────────────────────────────────
 def get_notifications(username: str) -> dict:
     users = _load()
-    return users.get(username, {}).get('notifications', {'rain': True, 'extreme': True, 'daily': False})
+    default = {'rain': True, 'extreme': True, 'daily': False}
+    if username in users and 'notifications' not in users[username]:
+        users[username]['notifications'] = default
+        _save(users)
+    return users.get(username, {}).get('notifications', default)
 
 
 def update_notifications(username: str, settings: dict) -> None:

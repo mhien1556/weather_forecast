@@ -33,7 +33,6 @@ def navbar(active_path: str):
     user = get_current_user()
 
     with ui.element('nav').classes('navbar'):
-        # ── Left: logo + nav links ─────────────────────────────
         with ui.row().classes('nav-left items-center no-wrap').style('gap:3rem'):
             ui.link('WeatherNow', '/').classes('logo').on('click', lambda: clear_city() or ui.navigate.to('/'))
             with ui.row().classes('nav-links items-center no-wrap').style('gap:2rem'):
@@ -45,7 +44,6 @@ def navbar(active_path: str):
                 for path, label in NAV_ITEMS:
                     ui.label(label).classes('nav-link ' + ('active' if path == active_path else '')).on('click', make_nav(path))
 
-        # ── Center: search ─────────────────────────────────────
         with ui.element('div').classes('nav-search'):
             with ui.element('div').classes('city-search-bar').style('max-width:100%;margin:0'):
                 city_input = ui.input(placeholder='Tìm thành phố...').classes('flex-grow q-input-dark').props('dense borderless dark')
@@ -58,30 +56,23 @@ def navbar(active_path: str):
 
                 ui.button(icon='search', on_click=nav_search).classes('icon-btn-round').props('flat round dense')
 
-        # ── Right: settings + user ─────────────────────────────
         with ui.row().classes('nav-right items-center no-wrap').style('gap:1.25rem'):
             ui.button(icon='settings', on_click=lambda: ui.navigate.to('/settings')).classes('icon-btn-round').props('flat round')
 
             if user:
-                # Đã đăng nhập → avatar + dropdown menu
                 _user_menu(user)
             else:
-                # Chưa đăng nhập → nút đăng nhập
                 ui.button('Đăng nhập', icon='login', on_click=lambda: ui.navigate.to('/login')) \
                     .classes('q-btn-login').props('unelevated no-caps')
 
 
 def _user_menu(user: dict):
-    """Avatar + dropdown menu khi đã đăng nhập."""
     with ui.element('div').classes('user-menu-wrapper'):
-        # Avatar button
         avatar_label = user.get('avatar', '?')
         with ui.element('div').classes('profile-avatar').style('cursor:pointer;position:relative'):
             avatar_el = ui.label(avatar_label)
 
-        # Dropdown (dùng ui.menu gắn vào avatar)
         with ui.menu().classes('user-dropdown-menu') as menu:
-            # Header
             with ui.element('div').classes('user-menu-header'):
                 with ui.element('div').classes('user-menu-avatar'):
                     ui.label(avatar_label)
@@ -91,10 +82,15 @@ def _user_menu(user: dict):
 
             ui.separator().style('background:rgba(255,255,255,0.08);margin:0.4rem 0')
 
-            ui.menu_item('👤  Thông tin cá nhân', on_click=lambda: ui.navigate.to('/profile')).classes('user-menu-item')
-            ui.menu_item('📍  Lịch sử truy cập', on_click=lambda: ui.notify('Tính năng sắp ra mắt!', type='info')).classes('user-menu-item')
-            ui.menu_item('⭐  Thành phố yêu thích', on_click=lambda: ui.notify('Tính năng sắp ra mắt!', type='info')).classes('user-menu-item')
-            ui.menu_item('🔔  Thông báo', on_click=lambda: ui.notify('Tính năng sắp ra mắt!', type='info')).classes('user-menu-item')
+            # Fix: navigate tới /profile thay vì notify
+            ui.menu_item('👤  Thông tin cá nhân',
+                on_click=lambda: ui.navigate.to('/profile')).classes('user-menu-item')
+            ui.menu_item('📍  Lịch sử truy cập',
+                on_click=lambda: ui.navigate.to('/profile?tab=history')).classes('user-menu-item')
+            ui.menu_item('⭐  Thành phố yêu thích',
+                on_click=lambda: ui.navigate.to('/profile?tab=favorites')).classes('user-menu-item')
+            ui.menu_item('🔔  Thông báo',
+                on_click=lambda: ui.navigate.to('/profile?tab=notifs')).classes('user-menu-item')
 
             ui.separator().style('background:rgba(255,255,255,0.08);margin:0.4rem 0')
 
@@ -104,7 +100,6 @@ def _user_menu(user: dict):
 
             ui.menu_item('🚪  Đăng xuất', on_click=do_logout).classes('user-menu-item user-menu-logout')
 
-        # Gắn menu vào avatar
         avatar_el.on('click', menu.open)
 
 
