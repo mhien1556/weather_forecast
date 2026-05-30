@@ -115,7 +115,18 @@
     "favorites": [
       "Hồ Chí Minh"
     ],
-    "history": [],
+    "history": [
+      {
+        "city": "Da Nang",
+        "brief": "",
+        "time": "30/05/2026 17:41"
+      },
+      {
+        "city": "Ho Chi Minh City",
+        "brief": "",
+        "time": "30/05/2026 17:41"
+      }
+    ],
     "notifications": {
       "rain": true,
       "extreme": true,

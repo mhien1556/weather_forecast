@@ -88,5 +88,50 @@ Truy cập ứng dụng tại trình duyệt: **[http://localhost:5000](http://l
 | **Dữ liệu API**   | OpenWeatherMap (Current, Forecast, AQI)|
 
 ---
+ note những file đã thay đổi
+## `src/features/__init__.py`
+- Thêm import và đăng ký route `register_profile()` vào `register_all()`
 
+### `src/common/config.py`
+- Thêm hàm `get_current_user()` — lấy user đang đăng nhập từ session
+- Thêm hàm `set_current_user()` — lưu user vào session
+- Thêm hàm `logout_user()` — xóa user khỏi session
+- Sửa hàm `set_city()` — tự động lưu lịch sử tìm kiếm nếu đã đăng nhập
+
+### `src/common/components.py`
+- Sửa `navbar()` — hiện nút **Đăng nhập** khi chưa login, hiện **avatar + dropdown menu** khi đã login
+- Dropdown menu có: Thông tin cá nhân, Lịch sử, Yêu thích, Thông báo, Đăng xuất
+- Các mục dropdown navigate tới `/profile?tab=xxx`
+
+### `src/common/api.py`
+- Thêm hàm `_normalize_city()` — chuyển tên tỉnh thành tiếng Việt có dấu sang không dấu trước khi gọi API
+- Map sẵn 60+ tỉnh thành phổ biến (Đồng Tháp → Dong Thap, Hà Nội → Hanoi...)
+
+### `src/common/utils.py`
+- Sửa `parse_hourly()` — parse giờ thực tế từ `dt_txt` thay vì tính tay
+
+### `src/features/login/page.py`
+- Bỏ navbar và footer khỏi trang login
+- Căn giữa card bằng flexbox `100vh`
+
+### `src/features/login/widgets.py`
+- Thiết kế lại UI: glassmorphism card, tab Đăng nhập / Đăng ký
+- Thêm câu hỏi bảo mật khi đăng ký (dùng để quên mật khẩu)
+- Thêm flow **Quên mật khẩu** 2 bước: nhập username → trả lời câu hỏi bảo mật → đặt mật khẩu mới
+- **Đăng ký xong** → chuyển về tab Đăng nhập thay vì vào thẳng trang chủ
+
+### `src/features/home/page.py`
+- Thêm redirect về `/login` nếu chưa đăng nhập
+
+### `src/features/analysis/page.py`
+- Thiết kế lại layout: 4 KPI cards, 2 chart chính, chart theo giờ, phần nhận xét
+- Bỏ phần `stat_card` bị trùng lặp ở phía dưới
+
+### `src/features/analysis/charts.py`
+- Sửa format ngày trục X: `Thứ 3\n27/05` thay vì `05-27` (Plotly tự parse sai thành timestamp)
+- Thêm chart **Dự báo nhiệt độ theo giờ** (line chart màu cam)
+- Sửa chart **Xác suất mưa** dùng giờ thực tế từ API
+- Sửa `barmode='group'` cho chart so sánh nhiệt độ — click 1 lần ẩn/hiện đúng
+
+---
 *© 2026 WeatherNow — Phát triển và Thiết kế bởi Minh Hiển.*
