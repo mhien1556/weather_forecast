@@ -7,7 +7,7 @@ ICON_TO_MATERIAL = {
     'sun': 'wb_sunny',
     'cloud-sun': 'wb_cloudy',
     'cloud': 'cloud',
-    'cloud-rain': 'grain',
+    'cloud-rain': 'water_drop',
     'cloud-lightning': 'thunderstorm',
     'cloud-snow': 'ac_unit',
     'cloud-fog': 'foggy',
