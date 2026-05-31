@@ -1,4 +1,4 @@
-from nicegui import ui
+﻿from nicegui import ui
 
 from src.common.components import apply_theme, navbar
 from src.common.config import API_KEY, get_city
@@ -26,7 +26,7 @@ def register():
     def map_page():
         apply_theme()
         city = get_city()
-        weather = get_hourly_weather(API_KEY, city) if API_KEY else {'error': 'Thiếu OPENWEATHER_API_KEY'}
+        weather = get_hourly_weather(API_KEY, city) if API_KEY else {'error': 'Thiáº¿u OPENWEATHER_API_KEY'}
         lat = weather.get('lat', 21.0285) if not weather.get('error') else 21.0285
         lon = weather.get('lon', 105.8542) if not weather.get('error') else 105.8542
 
