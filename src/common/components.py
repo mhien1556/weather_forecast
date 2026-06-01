@@ -19,7 +19,9 @@ QUICK_CITIES = [
 
 
 def apply_theme():
-    ui.dark_mode(True)
+    from src.common.units import get_units
+    theme = get_units().get('theme', 'dark')
+    ui.dark_mode(theme == 'dark')
     ui.add_css(STYLES)
 
 
@@ -41,6 +43,20 @@ def navbar(active_path: str):
             ui.label('Minh Hiển').classes('text-center w-full font-bold')
             ui.label('minhhien@weathernow.vn').classes('text-center w-full').style('opacity:0.5')
             ui.button('Đăng xuất', icon='logout', color='red', on_click=lambda: ui.navigate.to('/login')).props('flat').classes('w-full q-mt-md')
+
+    with ui.dialog().props('position=right') as settings_dialog:
+        with ui.card().classes('card').style(
+            'width: 450px; max-width: 100vw; height: 100vh; max-height: 100vh; '
+            'margin: 0; border-radius: 0; background: rgba(20,22,28,0.95); '
+            'backdrop-filter: blur(12px); padding: 1.5rem; overflow-y: auto;'
+        ):
+            with ui.row().classes('items-center justify-between w-full mb-4').style('position: sticky; top: 0; z-index: 10; background: rgba(20,22,28,0.95); padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1)'):
+                ui.label('Cài đặt').classes('text-h5').style('font-weight: 700; margin: 0')
+                ui.button(icon='close', on_click=settings_dialog.close).props('flat round dense')
+            
+            from src.features.settings.widgets import render_settings_content
+            render_settings_content()
+
 
     with ui.element('nav').classes('navbar'):
         with ui.row().classes('nav-left items-center no-wrap').style('gap:3rem'):
@@ -68,7 +84,7 @@ def navbar(active_path: str):
                 ui.button(icon='search', on_click=nav_search).classes('icon-btn-round').props('flat round dense')
 
         with ui.row().classes('nav-right items-center no-wrap').style('gap:1.25rem'):
-            ui.button(icon='settings', on_click=lambda: ui.navigate.to('/settings')).classes('icon-btn-round').props('flat round')
+            ui.button(icon='settings', on_click=settings_dialog.open).classes('icon-btn-round').props('flat round')
             with ui.element('div').classes('profile-avatar').on('click', profile_dialog.open):
                 ui.label('MH')
 

@@ -213,6 +213,22 @@ div { box-sizing: border-box; }
 .map-app .page-content { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 .map-page-wrapper { position: relative; height: calc(100vh - 64px); min-height: 500px; overflow: hidden; background: #0a0c10; }
 .map-stage { position: relative; width: 100%; height: 100%; }
+.map-wind-particles {
+    position: absolute; inset: 0; z-index: 480;
+    pointer-events: none; width: 100%; height: 100%;
+}
+/* Tile màu OpenWeather — không filter để màu khớp legend */
+.map-stage[class*="map-layer-"] .leaflet-tile-pane img.leaflet-tile {
+    opacity: 1 !important;
+}
+.legend-title {
+    font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.97);
+    margin-bottom: 0.45rem; letter-spacing: 0.02em; text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.legend-gradient {
+    height: 12px; width: 100%; border-radius: 6px;
+    transition: background 0.25s ease; margin-bottom: 0.5rem;
+}
 .map-leaflet-fill,
 .map-stage .nicegui-leaflet {
     position: absolute !important; inset: 0 !important;
@@ -247,10 +263,10 @@ div { box-sizing: border-box; }
 .map-legend-float { bottom: 20px; right: 16px; width: 300px; max-width: calc(100vw - 32px); }
 
 .map-menu-card {
-    background: rgba(18, 20, 28, 0.82); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0.35rem;
+    background: rgba(20, 34, 60, 0.58); backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(148,187,255,0.22); border-radius: 14px; padding: 0.35rem;
     display: flex; flex-direction: column; gap: 0.15rem;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .map-menu-item {
     display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1rem;
@@ -266,9 +282,9 @@ div { box-sizing: border-box; }
 }
 
 .map-location-card {
-    background: rgba(18, 20, 28, 0.88); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 1.1rem 1.25rem;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    background: rgba(20, 34, 60, 0.58); backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(148,187,255,0.22); border-radius: 14px; padding: 1.1rem 1.25rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
     overflow: hidden; position: relative; isolation: isolate;
     width: 100%; box-sizing: border-box;
 }
@@ -327,9 +343,9 @@ div { box-sizing: border-box; }
 .map-location-main-unit {
     font-size: 1.05rem; color: rgba(255,255,255,0.55); white-space: nowrap;
 }
-.map-location-details { display: flex; flex-direction: column; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
-.map-location-row-label { font-size: 0.82rem; color: rgba(255,255,255,0.5); }
-.map-location-row-value { font-size: 0.82rem; color: rgba(255,255,255,0.9); font-weight: 500; }
+.map-location-details { display: flex; flex-direction: column; gap: 0.45rem; padding-top: 0.75rem; border-top: 1px solid rgba(148,187,255,0.18); }
+.map-location-row-label { font-size: 0.82rem; color: rgba(200,220,255,0.65); }
+.map-location-row-value { font-size: 0.82rem; color: rgba(255,255,255,0.97); font-weight: 600; }
 
 
 /* Glassmorphism round icon button for map floating actions */
@@ -337,11 +353,11 @@ div { box-sizing: border-box; }
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    background: rgba(15, 23, 42, 0.88);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(20, 34, 60, 0.65);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(148,187,255,0.22);
     color: white;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
     min-width: unset !important;
     padding: 0 !important;
     transition: all 0.35s ease;
@@ -365,28 +381,24 @@ div { box-sizing: border-box; }
 .map-timeline-slider .q-slider__track-container--h { height: 5px; }
 .map-timeline-slider .q-slider__thumb { width: 16px; height: 16px; }
 .timeline-card {
-    background: rgba(18, 20, 28, 0.88); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0.75rem 1rem;
+    background: rgba(20, 34, 60, 0.58); backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(148,187,255,0.22); border-radius: 14px; padding: 0.75rem 1rem;
     display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
     align-items: center; gap: 0.65rem; width: 100%;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
 }
-.timeline-nav-btn { color: rgba(255,255,255,0.7) !important; min-width: 36px !important; }
+.timeline-nav-btn { color: rgba(255,255,255,0.85) !important; min-width: 36px !important; }
 .timeline-time-label {
-    font-size: 0.8rem; color: rgba(255,255,255,0.75); font-family: monospace;
-    white-space: nowrap; min-width: 130px; text-align: right;
+    font-size: 0.8rem; color: rgba(255,255,255,0.9); font-family: monospace;
+    white-space: nowrap; min-width: 130px; text-align: right; font-weight: 500;
 }
 .legend-card {
-    background: rgba(18, 20, 28, 0.88); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 0.85rem 1rem;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-}
-.legend-gradient {
-    height: 10px; width: 100%; border-radius: 6px;
-    transition: background 0.25s ease; margin-bottom: 0.5rem;
+    background: rgba(20, 34, 60, 0.58); backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid rgba(148,187,255,0.22); border-radius: 14px; padding: 0.85rem 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .legend-labels { display: flex; justify-content: space-between; }
-.legend-end-label { font-size: 0.72rem; color: rgba(255,255,255,0.45); font-family: monospace; }
+.legend-end-label { font-size: 0.72rem; color: rgba(255,255,255,0.7); font-family: monospace; font-weight: 500; }
 
 @media (max-width: 900px) {
     .map-location-float { width: 260px; top: 72px; right: 8px; }

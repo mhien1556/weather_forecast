@@ -1,12 +1,14 @@
 import plotly.graph_objects as go
 
 from src.common.charts_base import chart_layout
+from src.common.units import get_units, convert_temp
 
 
 def build_charts(processed_data: dict) -> dict:
     if not processed_data:
         return {}
 
+    u_temp = get_units()['unit_temp']
     daily = processed_data.get('daily', [])
     hourly = processed_data.get('hourly', [])
     aqi = processed_data.get('aqi')
@@ -16,12 +18,12 @@ def build_charts(processed_data: dict) -> dict:
         fig1 = go.Figure()
         fig1.add_trace(go.Bar(
             x=[d['date'][5:] for d in daily[:7]],
-            y=[round(d['temp_min']) for d in daily[:7]],
+            y=[round(convert_temp(d['temp_min'], u_temp)) for d in daily[:7]],
             name='Thấp nhất', marker_color='rgba(255,255,255,0.2)',
         ))
         fig1.add_trace(go.Bar(
             x=[d['date'][5:] for d in daily[:7]],
-            y=[round(d['temp_max']) for d in daily[:7]],
+            y=[round(convert_temp(d['temp_max'], u_temp)) for d in daily[:7]],
             name='Cao nhất', marker_color='#4facfe',
         ))
         fig1.update_layout(chart_layout(

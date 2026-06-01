@@ -3,6 +3,7 @@ from nicegui import ui
 from src.common.components import metric_card, plotly_chart
 from src.common.config import API_KEY
 from src.common.utils import lucide_to_material
+from src.common.units import format_temp, format_wind_from_ms, format_pressure, format_visibility
 
 
 def render_hero(weather: dict):
@@ -16,20 +17,20 @@ def render_hero(weather: dict):
         with ui.element('div').classes('current-temp-large'):
             with ui.element('div').classes('temp-row'):
                 ui.icon(lucide_to_material(weather.get('lucide_icon', 'cloud'))).style('font-size:80px;color:#fff')
-                ui.label(f'{weather.get("temp", "--")}°C').classes('temp-value')
+                ui.label(format_temp(weather.get("temp", "--"))).classes('temp-value')
             with ui.element('div').classes('condition-info'):
                 ui.label(weather.get('desc', ''))
                 ui.label(' • ').style('opacity:0.5')
-                ui.label(f'Cảm giác như {weather.get("feels_like", "--")}°C')
+                ui.label(f'Cảm giác như {format_temp(weather.get("feels_like", "--"))}')
 
 
 def render_metrics(weather: dict):
     with ui.element('div').classes('metrics-grid'):
         metric_card('droplets', 'Độ ẩm', f'{weather.get("humidity", "--")}%')
-        metric_card('wind', 'Gió', f'{weather.get("wind", "--")} km/h')
-        metric_card('gauge', 'Áp suất', f'{weather.get("pressure", "--")} hPa')
-        metric_card('eye', 'Tầm nhìn', f'{weather.get("visibility", "--")} km')
-        metric_card('thermometer-snowflake', 'Điểm sương', f'{weather.get("dew_point", "--")}°C')
+        metric_card('wind', 'Gió', format_wind_from_ms(weather.get("wind", "--")))
+        metric_card('gauge', 'Áp suất', format_pressure(weather.get("pressure", "--")))
+        metric_card('eye', 'Tầm nhìn', format_visibility(weather.get("visibility", "--")))
+        metric_card('thermometer-snowflake', 'Điểm sương', format_temp(weather.get("dew_point", "--")))
         metric_card('sunrise', 'Bình minh', weather.get('sunrise', '--'))
         metric_card('sunset', 'Hoàng hôn', weather.get('sunset', '--'))
         uv = weather.get('uv_index')
@@ -127,5 +128,5 @@ def render_forecast_sidebar(daily: list):
                     ui.icon(lucide_to_material(day.get('lucide_icon', 'cloud')))
                     ui.label(f'{day["pop_max"]}%').style('font-size:0.8rem;opacity:0.6')
                 with ui.row().classes('forecast-temps justify-end'):
-                    ui.label(f'{round(day["temp_max"])}°').style('font-weight:600')
-                    ui.label(f'{round(day["temp_min"])}°').classes('min')
+                    ui.label(format_temp(day["temp_max"])).style('font-weight:600')
+                    ui.label(format_temp(day["temp_min"])).classes('min')

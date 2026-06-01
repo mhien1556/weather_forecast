@@ -1,12 +1,15 @@
-﻿from nicegui import ui
+from nicegui import ui
 
 from src.common.components import apply_theme, navbar
 from src.common.config import API_KEY, get_city
 
 from .constants import MAP_LAYERS
 from .layer_config import LAYER_CONFIG
+from .particles import PARTICLES_SCRIPT
 from .service import (
     BASE_TILE_URL,
+    DARK_BASE_TILE_URL,
+    LABELS_TILE_URL,
     build_timeline,
     build_weather_tile_url,
     default_timeline_index,
@@ -18,15 +21,18 @@ from .service import (
 from .widgets import create_location_panel
 
 _TAG = 'div'
-_WEATHER_OPACITY = 0.75
+_DEFAULT_OPACITY = 0.75
+_LAYER_CLASS_PREFIX = 'map-layer-'
 
 
 def register():
     @ui.page('/map')
     def map_page():
         apply_theme()
+        ui.add_body_html(f'<script>{PARTICLES_SCRIPT}</script>')
+
         city = get_city()
-        weather = get_hourly_weather(API_KEY, city) if API_KEY else {'error': 'Thiáº¿u OPENWEATHER_API_KEY'}
+        weather = get_hourly_weather(API_KEY, city) if API_KEY else {'error': 'Thiếu OPENWEATHER_API_KEY'}
         lat = weather.get('lat', 21.0285) if not weather.get('error') else 21.0285
         lon = weather.get('lon', 105.8542) if not weather.get('error') else 105.8542
 
@@ -34,9 +40,16 @@ def register():
         timeline_labels = [format_timeline_label(ts) for ts in timeline]
         default_idx = default_timeline_index(timeline)
 
-        layer_state = {'name': 'temp_new', 'time_idx': default_idx}
+        layer_state = {'name': 'temp_new', 'time_idx': default_idx, 'particles': True}
         chrome_state = {'visible': True}
-        map_ref = {'leaflet': None, 'weather_layer': None, 'marker': None, 'ready': False}
+        map_ref = {
+            'leaflet': None,
+            'weather_layer': None,
+            'base_layer': None,
+            'labels_layer': None,
+            'marker': None,
+            'ready': False,
+        }
         sel_state = {
             'lat': lat,
             'lon': lon,
@@ -52,20 +65,38 @@ def register():
                 return ''
             return build_weather_tile_url(key, API_KEY, current_timestamp())
 
+        def tile_opacity(layer_key: str | None = None) -> float:
+            key = layer_key or layer_state['name']
+            return LAYER_CONFIG.get(key, {}).get('tile_opacity', _DEFAULT_OPACITY)
+
+        def sync_particles(wind_deg: int = 180):
+            active = layer_state['particles'] and layer_state['name'] == 'wind_new'
+            enabled = 'true' if active else 'false'
+            ui.run_javascript(
+                f'window.weatherMapParticles?.apply({{'
+                f'layer: "wind_new", enabled: {enabled}, windDeg: {wind_deg}'
+                f'}})'
+            )
+
+        def apply_layer_stage_class(layer_key: str):
+            for key in LAYER_CONFIG:
+                map_stage.classes(remove=f'{_LAYER_CLASS_PREFIX}{key.replace("_new", "")}')
+            short = layer_key.replace('_new', '')
+            map_stage.classes(add=f'{_LAYER_CLASS_PREFIX}{short}')
+
         def refresh_weather_tiles(layer_key: str | None = None):
-            if not API_KEY or not map_ref['ready'] or not map_ref['leaflet']:
+            if not API_KEY:
                 return
-            url = weather_url(layer_key)
+            key = layer_key or layer_state['name']
+            url = weather_url(key)
+            opacity = tile_opacity(key)
             wl = map_ref['weather_layer']
-            if wl is not None:
+            if wl is None:
+                return
+            if map_ref['ready']:
                 wl.run_method('setUrl', url)
-                wl.run_method('setOpacity', _WEATHER_OPACITY)
+                wl.run_method('setOpacity', opacity)
                 wl.run_method('redraw')
-            else:
-                map_ref['weather_layer'] = map_ref['leaflet'].tile_layer(
-                    url_template=url,
-                    options={'opacity': _WEATHER_OPACITY},
-                )
 
         update_location = None
 
@@ -75,15 +106,32 @@ def register():
             ts = current_timestamp()
             snap = resolve_snapshot(sel_state['lat'], sel_state['lon'], ts, sel_state['hourly'])
             update_location(snap, sel_state['lat'], sel_state['lon'], layer_state['name'])
+            wind_deg = int(snap.get('wind_deg', 180) or 180)
+            sync_particles(wind_deg)
 
         def on_map_ready():
             map_ref['ready'] = True
-            if API_KEY:
-                refresh_weather_tiles('temp_new')
+            apply_layer_stage_class(layer_state['name'])
+            refresh_weather_tiles(layer_state['name'])
             refresh_location_panel()
+            ui.run_javascript('''
+                window.weatherMapParticles?.init();
+                const el = document.querySelector('.map-stage .leaflet-container');
+                if (el) {
+                    for (const k of Object.keys(el)) {
+                        const v = el[k];
+                        if (v && v.latLngToContainerPoint && v.getBounds) {
+                            window.__niceguiLeafletMap = v;
+                            break;
+                        }
+                    }
+                }
+                window.weatherMapParticles?.onMapMove();
+            ''')
 
         def update_legend(layer_key: str):
             cfg = LAYER_CONFIG[layer_key]
+            legend_title.set_text(f"{cfg['label']}   {cfg['legend_min']} … {cfg['legend_max']}")
             legend_gradient.style(f"background: {cfg['gradient']}")
             legend_min.set_text(cfg['legend_min'])
             legend_max.set_text(cfg['legend_max'])
@@ -124,15 +172,14 @@ def register():
         def set_layer(layer_key, btn_el):
             layer_state['name'] = layer_key
             update_legend(layer_key)
+            apply_layer_stage_class(layer_key)
             for item in menu_items:
                 item.classes(remove='active')
             btn_el.classes(add='active')
-            wl = map_ref['weather_layer']
-            if wl is not None:
-                wl.delete()
-                map_ref['weather_layer'] = None
             refresh_weather_tiles(layer_key)
             refresh_location_panel()
+            if layer_key != 'wind_new':
+                ui.run_javascript('window.weatherMapParticles?.apply({enabled: false})')
 
         def toggle_chrome():
             chrome_state['visible'] = not chrome_state['visible']
@@ -143,11 +190,27 @@ def register():
                 map_chrome_panels.classes(add='map-chrome-panels--hidden')
                 eye_btn.props('icon=visibility_off')
 
+        def toggle_particles(e):
+            layer_state['particles'] = bool(e.value)
+            ts = current_timestamp()
+            snap = resolve_snapshot(sel_state['lat'], sel_state['lon'], ts, sel_state['hourly'])
+            sync_particles(int(snap.get('wind_deg', 180) or 180))
+
         with ui.element(_TAG).classes('app-container map-app'):
             navbar('/map')
 
+            if not API_KEY:
+                with ui.row().classes('w-full justify-center').style(
+                    'position:relative;z-index:2000;background:#b71c1c;color:#fff;padding:0.5rem 1rem;font-size:0.9rem'
+                ):
+                    ui.label(
+                        'Thiếu OPENWEATHER_API_KEY trong file .env — bản đồ màu không hiển thị. '
+                        'Thêm key rồi restart server.'
+                    )
+
             with ui.element(_TAG).classes('page-content map-page-wrapper'):
-                with ui.element(_TAG).classes('map-stage'):
+                map_stage = ui.element(_TAG).classes('map-stage map-layer-temp')
+                with map_stage:
                     m = ui.leaflet(
                         center=(lat, lon),
                         zoom=5,
@@ -156,16 +219,38 @@ def register():
                     map_ref['leaflet'] = m
                     m.on('init', on_map_ready)
                     m.on('map-click', on_map_click)
+                    m.on('map-moveend', lambda _: ui.run_javascript('window.weatherMapParticles?.onMapMove()'))
+                    m.on('map-zoomend', lambda _: ui.run_javascript('window.weatherMapParticles?.onMapMove()'))
                     m.clear_layers()
-                    m.tile_layer(
-                        url_template=BASE_TILE_URL,
-                        options={
-                            'maxZoom': 19,
-                            'subdomains': 'abcd',
-                            'attribution': '&copy; OpenStreetMap &copy; CARTO',
-                        },
-                    )
+                    _tile_opts = {'maxZoom': 19, 'subdomains': 'abcd'}
+                    if API_KEY:
+                        map_ref['base_layer'] = m.tile_layer(
+                            url_template=DARK_BASE_TILE_URL,
+                            options={
+                                **_tile_opts,
+                                'attribution': '&copy; OpenStreetMap &copy; CARTO',
+                            },
+                        )
+                        map_ref['weather_layer'] = m.tile_layer(
+                            url_template=build_weather_tile_url(
+                                'temp_new', API_KEY, timeline[default_idx]
+                            ),
+                            options={'opacity': 1.0, 'maxZoom': 19},
+                        )
+                        map_ref['labels_layer'] = m.tile_layer(
+                            url_template=LABELS_TILE_URL,
+                            options={**_tile_opts, 'opacity': 1.0},
+                        )
+                    else:
+                        map_ref['base_layer'] = m.tile_layer(
+                            url_template=BASE_TILE_URL,
+                            options={
+                                **_tile_opts,
+                                'attribution': '&copy; OpenStreetMap &copy; CARTO',
+                            },
+                        )
                     map_ref['marker'] = m.marker(latlng=(lat, lon))
+                    ui.element('canvas').classes('map-wind-particles')
 
                     with ui.element(_TAG).classes('map-ui-layer'):
                         with ui.element(_TAG).classes('map-float map-view-float'):
@@ -187,6 +272,12 @@ def register():
                                                 ui.icon(icon)
                                                 ui.label(label)
                                         item.on('click', lambda k=key, el=item: set_layer(k, el))
+
+                                    ui.element(_TAG).classes('map-menu-divider')
+                                    with ui.element(_TAG).classes('map-menu-footer'):
+                                        ui.label('Hạt gió')
+                                        wind_switch = ui.switch(value=True)
+                                        wind_switch.on_value_change(toggle_particles)
 
                             with ui.element(_TAG).classes('map-float map-location-float'):
                                 update_location = create_location_panel()
@@ -230,8 +321,19 @@ def register():
 
                             with ui.element(_TAG).classes('map-float map-legend-float'):
                                 with ui.element(_TAG).classes('legend-card'):
+                                    legend_title = ui.label(cfg0['label']).classes('legend-title')
                                     legend_gradient = ui.element(_TAG).classes('legend-gradient')
                                     legend_gradient.style(f"background: {cfg0['gradient']}")
                                     with ui.row().classes('legend-labels w-full justify-between'):
                                         legend_min = ui.label(cfg0['legend_min']).classes('legend-end-label')
                                         legend_max = ui.label(cfg0['legend_max']).classes('legend-end-label')
+
+        def draw_content():
+            apply_theme()
+            refresh_location_panel()
+
+        from src.common.units import RefreshRegistry
+        client_id = ui.context.client.id
+        RefreshRegistry.register(client_id, draw_content)
+        ui.context.client.on_disconnect(lambda: RefreshRegistry.clear(client_id))
+

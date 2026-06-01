@@ -1,13 +1,15 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from nicegui import app
 
 from .utils import get_location_by_ip
 
-load_dotenv()
+_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(_ROOT / '.env')
 
-API_KEY = os.getenv('OPENWEATHER_API_KEY', '')
+API_KEY = os.getenv('OPENWEATHER_API_KEY', '').strip()
 
 
 def get_city() -> str:

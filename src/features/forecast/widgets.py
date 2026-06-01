@@ -1,6 +1,7 @@
 from nicegui import ui
 
 from src.common.utils import lucide_to_material
+from src.common.units import format_temp, format_wind_from_ms
 
 _TAG = 'div'
 
@@ -15,8 +16,8 @@ def render_daily_cards(daily: list):
                 with ui.column().classes('detail-body items-center'):
                     ui.icon(lucide_to_material(day.get('lucide_icon', 'cloud'))).style('font-size:64px;color:#4facfe')
                     with ui.row().classes('temp-range'):
-                        ui.label(f'{round(day["temp_max"])}°').style('font-weight:700;font-size:2rem')
-                        ui.label(f'{round(day["temp_min"])}°').classes('min').style('font-size:2rem;opacity:0.6')
+                        ui.label(format_temp(day["temp_max"])).style('font-weight:700;font-size:2rem')
+                        ui.label(format_temp(day["temp_min"])).classes('min').style('font-size:2rem;opacity:0.6')
                     ui.label(day['description'].capitalize()).style('opacity:0.8')
                 with ui.row().classes('detail-footer w-full justify-around'):
                     with ui.row().classes('footer-stat items-center gap-1'):
@@ -24,4 +25,4 @@ def render_daily_cards(daily: list):
                         ui.label(f'{day["humidity_avg"]}%')
                     with ui.row().classes('footer-stat items-center gap-1'):
                         ui.icon('air')
-                        ui.label(f'{day["wind_avg"]} m/s')
+                        ui.label(format_wind_from_ms(day["wind_avg"]))

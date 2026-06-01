@@ -1,6 +1,7 @@
 from nicegui import ui
 
 from .service import main_metric_value
+from src.common.units import format_temp, format_wind_from_ms, format_pressure, get_units, convert_temp, convert_wind_from_ms, convert_pressure
 
 _TAG = 'div'
 
@@ -49,19 +50,35 @@ def create_location_panel():
 
     def update(snapshot: dict, lat: float, lon: float, layer_key: str):
         refs['coords'].set_text(f'{lat:.2f}, {lon:.2f}')
-        val, unit = main_metric_value(snapshot, layer_key)
-        refs['main_value'].set_text(val)
-        refs['main_unit'].set_text(unit)
+        
+        # Format metric chính
+        if layer_key == 'temp_new':
+            u = get_units()['unit_temp']
+            refs['main_value'].set_text(str(convert_temp(snapshot.get('temp'), u)))
+            refs['main_unit'].set_text('°F' if u == 'F' else '°C')
+        elif layer_key == 'wind_new':
+            u = get_units()['unit_wind']
+            refs['main_value'].set_text(str(convert_wind_from_ms(snapshot.get('wind_speed'), u)))
+            refs['main_unit'].set_text(u)
+        elif layer_key == 'pressure_new':
+            u = get_units()['unit_pressure']
+            refs['main_value'].set_text(str(convert_pressure(snapshot.get('pressure'), u)))
+            refs['main_unit'].set_text(u)
+        else:
+            val, unit = main_metric_value(snapshot, layer_key)
+            refs['main_value'].set_text(val)
+            refs['main_unit'].set_text(unit)
+
         icon = snapshot.get('material_icon', 'wb_sunny')
         tone = _ICON_STYLE.get(icon, 'icon-cloud')
         refs['main_glyph'].content = (
             f'<span class="material-icons map-location-weather-glyph {tone}">{icon}</span>'
         )
-        refs['feels_like'].set_text(f"{snapshot['feels_like']} °C")
-        refs['wind_speed'].set_text(f"{snapshot['wind_speed']} m/s")
+        refs['feels_like'].set_text(format_temp(snapshot['feels_like']))
+        refs['wind_speed'].set_text(format_wind_from_ms(snapshot['wind_speed']))
         refs['wind_dir'].set_text(str(snapshot['wind_dir']))
         refs['humidity'].set_text(f"{snapshot['humidity']} %")
         refs['clouds'].set_text(f"{snapshot['clouds']} %")
-        refs['pressure'].set_text(f"{snapshot['pressure']} hPa")
+        refs['pressure'].set_text(format_pressure(snapshot['pressure']))
 
     return update

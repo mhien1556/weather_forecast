@@ -3,13 +3,15 @@
 import plotly.graph_objects as go
 
 from .charts_base import chart_layout
+from .units import get_units, convert_temp
 
 
 def create_temp_trend_chart(daily_data):
     if not daily_data:
         return None
+    u_temp = get_units()['unit_temp']
     labels = [d['day_name'][:3] for d in daily_data[:7]]
-    temps = [round((d['temp_max'] + d['temp_min']) / 2) for d in daily_data[:7]]
+    temps = [round(convert_temp((d['temp_max'] + d['temp_min']) / 2, u_temp)) for d in daily_data[:7]]
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=labels, y=temps, mode='lines',

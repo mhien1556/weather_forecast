@@ -1,15 +1,17 @@
 import plotly.graph_objects as go
 
 from src.common.charts_base import chart_layout
+from src.common.units import get_units, convert_temp
 
 
 def create_detailed_chart(daily_data):
     if not daily_data:
         return None
+    u_temp = get_units()['unit_temp']
     slice_data = daily_data[:7]
     labels = [d['day_name'] for d in slice_data]
-    max_temps = [round(d['temp_max']) for d in slice_data]
-    min_temps = [round(d['temp_min']) for d in slice_data]
+    max_temps = [round(convert_temp(d['temp_max'], u_temp)) for d in slice_data]
+    min_temps = [round(convert_temp(d['temp_min'], u_temp)) for d in slice_data]
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=labels, y=max_temps, mode='lines+markers', name='Cao nhất',

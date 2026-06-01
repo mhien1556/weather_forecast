@@ -14,6 +14,9 @@ _location_cache: dict = {}
 _cache_expiry = timedelta(minutes=10)
 
 BASE_TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+DARK_BASE_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
+LABELS_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
+WEATHER_OVERLAY_LAYERS = frozenset(LAYER_CONFIG.keys())
 MAP_STEP_SECONDS = 3 * 3600
 
 _COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
