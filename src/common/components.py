@@ -1,24 +1,45 @@
 from nicegui import app, ui
 
 from .theme import STYLES
-from .utils import lucide_to_material, is_raining
+from .utils import lucide_to_material, is_raining, get_weather_color
 from .config import get_city, set_city, clear_city, get_current_user, logout_user
 
 NAV_ITEMS = [('/', 'Trang chủ'), ('/forecast', 'Dự báo'), ('/map', 'Bản đồ'), ('/analysis', 'Phân tích')]
 
 
-def apply_theme():
+def apply_theme(weather=None):
     """Áp dụng CSS và chế độ tối/sáng.
-    NiceGUI tự thêm class .body--dark hoặc .body--light → CSS variables tự đổi.
-    Không cần JavaScript.
+    Tự động đồng bộ cài đặt từ DB vào Session Storage khi người dùng đăng nhập.
     """
     try:
         from src.common.units import get_units
-        is_dark = get_units().get('theme', 'dark') == 'dark'
+        user = get_current_user()
+        
+        # Nếu đã đăng nhập và cần đồng bộ cài đặt (chưa sync hoặc vừa lưu mới)
+        if user and not app.storage.user.get('_settings_synced'):
+            from src.database.user_store import get_user_settings
+            username = user['username']
+            
+            # Lấy cài đặt đơn vị, theme & language từ DB
+            db_settings = get_user_settings(username)
+            for key, val in db_settings.items():
+                app.storage.user[key] = val
+            
+            app.storage.user['_settings_synced'] = True
+            print(f"[SYSTEM] Đã đồng bộ cài đặt từ DB cho user: {username}")
+
+        units = get_units()
+        is_dark = units.get('theme', 'dark') == 'dark'
     except Exception:
         is_dark = True
     ui.dark_mode(is_dark)
     ui.add_css(STYLES)
+
+    # 🌈 ĐỒNG BỘ MÀU SẮC THEO ICON THỜI TIẾT
+    if weather and not weather.get('error'):
+        icon = weather.get('icon')
+        accent_color = get_weather_color(icon)
+        ui.add_css(f':root {{ --accent-color: {accent_color} !important; }}')
 
 
 def open_settings_dialog():
@@ -33,9 +54,8 @@ def open_settings_dialog():
     dialog.open()
 
 
-def hero_background(weather):
-    rain = weather and is_raining(weather.get('icon')) if weather else False
-    with ui.element('div').classes('hero-bg' + (' rain' if rain else '')):
+def hero_background(_=None):
+    with ui.element('div').classes('hero-bg'):
         ui.element('div').classes('overlay')
 
 
@@ -57,6 +77,7 @@ def navbar(active_path: str):
                 city_input = ui.input(
                     placeholder='Tìm thành phố...'
                 ).classes('flex-grow q-input-dark').props('dense borderless')
+                
                 city_input.value = get_city().split(',')[0] if get_city() else ''
 
                 def nav_search():
@@ -64,6 +85,7 @@ def navbar(active_path: str):
                         set_city(city_input.value)
                         ui.navigate.to(active_path)
 
+                city_input.on('keydown.enter', nav_search)
                 ui.button(icon='search', on_click=nav_search).classes('icon-btn-round').props('flat round dense')
 
         with ui.row().classes('nav-right items-center no-wrap').style('gap:1.25rem'):
@@ -75,11 +97,6 @@ def navbar(active_path: str):
                     'Đăng nhập', icon='login',
                     on_click=lambda: ui.navigate.to('/login')
                 ).classes('q-btn-login').props('unelevated no-caps')
-
-
-def city_search_section(target_path: str, weather):
-    pass
-
 
 def _user_menu(user: dict):
     """Menu user — màu sắc hoàn toàn từ CSS variables, không hard-code."""

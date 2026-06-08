@@ -225,12 +225,14 @@ class AdminPage:
             with ui.column().style('gap:2px;flex:1;'):
                 ui.label('Quản lý người dùng').style(f'{HEADER_STYLE}font-size:1.35rem;')
                 ui.label(f'{len(users)} người dùng trong hệ thống').style(f'color:{TEXT_MUTED};font-size:.82rem;')
-            if self._is_super():
-                ui.button('+ Thêm', on_click=self._add_dialog).props('unelevated no-caps').style(
-                    f'background:{PRIMARY};border-radius:8px;font-weight:600;')
+            # Cập nhật: Cho phép cả Admin và SuperAdmin thêm người dùng
+            ui.button('+ Thêm', on_click=self._add_dialog).props('unelevated no-caps').style(
+                f'background:{PRIMARY};border-radius:8px;font-weight:600;')
 
-        ui.input('🔍  Tìm kiếm...').props('outlined dense').classes('w-full').style(
+        # Sửa lỗi tìm kiếm: Gán sự kiện on_change để lọc danh sách
+        search_input = ui.input('🔍  Tìm kiếm...').props('outlined dense').classes('w-full').style(
             f'margin-bottom:14px;max-width:380px;')
+        search_input.on('update:model-value', lambda: user_table.refresh())
 
         def confirm_action(title, message, on_confirm):
             with ui.dialog() as dlg, ui.card().style(CARD_STYLE + "width: 400px;"):
@@ -278,50 +280,71 @@ class AdminPage:
                 ui.notify('Không thể thay đổi quyền của Super Admin', type='negative')
 
         def do_delete(u):
+            admin_role = app.storage.user.get('admin_role')
             user = user_store.get_user(u)
-            if user and user.get('role') != 'super_admin':
+            if not user: return
+            
+            target_role = user.get('role')
+            
+            if target_role == 'super_admin':
+                ui.notify('Không thể xóa Super Admin!', type='negative')
+            elif admin_role == 'admin' and target_role == 'admin':
+                ui.notify('Admin không có quyền xóa Admin khác!', type='negative')
+            else:
                 user_store.delete_user(u)
                 ui.notify(f"Đã xóa người dùng {u}", type='positive')
                 ui.navigate.to('/admin')
-            else:
-                ui.notify('Không thể xóa Super Admin', type='negative')
 
-        with ui.column().classes('w-full').style(f'{CARD_STYLE} padding: 0; overflow: hidden;'):
-            # Header
-            with ui.row().classes('w-full items-center').style(f'background: #1e293b; padding: 12px 16px; border-bottom: 1px solid {BORDER};'):
-                ui.label('TÀI KHOẢN').style(f'flex: 2; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
-                ui.label('HỌ TÊN').style(f'flex: 2; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
-                ui.label('EMAIL').style(f'flex: 3; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
-                ui.label('VAI TRÒ').style(f'flex: 1.5; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
-                ui.label('THAO TÁC').style(f'flex: 2; text-align: center; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+        @ui.refreshable
+        def user_table():
+            print(f"Refreshing user_table. Current search filter: '{search_input.value}'") # Debugging line
+            users_data = self._get_users()
+            filter_text = search_input.value.lower() if search_input.value else ''
             
-            # Rows
-            if not users:
-                ui.label('Không có người dùng nào').style(f'padding: 24px; text-align: center; color: {TEXT_SUB}; w-full')
-            
-            for i, (u, info) in enumerate(users.items()):
-                bg = 'transparent' if i % 2 == 0 else '#1e293b40'
-                with ui.row().classes('w-full items-center').style(f'padding: 12px 16px; background: {bg}; border-bottom: 1px solid {BORDER}; transition: background 0.2s;'):
-                    ui.label(u).style(f'flex: 2; font-weight: 600; color: {TEXT_MAIN};')
-                    ui.label(info.get('name', '-')).style(f'flex: 2; color: {TEXT_MAIN}; font-size: 0.9rem;')
-                    ui.label(info.get('email', '-')).style(f'flex: 3; color: {TEXT_SUB}; font-size: 0.85rem; word-break: break-all;')
-                    
-                    role = info.get('role', 'user')
-                    role_color = '#ef4444' if role == 'super_admin' else '#f59e0b' if role == 'admin' else '#3b82f6'
-                    with ui.row().style('flex: 1.5;'):
-                        ui.label(role).style(f'background: {role_color}20; color: {role_color}; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; text-transform: uppercase; font-weight: 700; border: 1px solid {role_color}40;')
+            with ui.column().classes('w-full').style(f'{CARD_STYLE} padding: 0; overflow: hidden;'):
+                # Header
+                with ui.row().classes('w-full items-center').style(f'background: #1e293b; padding: 12px 16px; border-bottom: 1px solid {BORDER};'):
+                    ui.label('TÀI KHOẢN').style(f'flex: 2; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+                    ui.label('HỌ TÊN').style(f'flex: 2; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+                    ui.label('EMAIL').style(f'flex: 3; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+                    ui.label('VAI TRÒ').style(f'flex: 1.5; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+                    ui.label('THAO TÁC').style(f'flex: 2; text-align: center; font-size: 0.8rem; font-weight: 700; color: {TEXT_MUTED};')
+                
+                # Rows
+                filtered_users = {u: info for u, info in users_data.items() 
+                                 if filter_text in u.lower() or filter_text in info.get('name','').lower()}
+                
+                if not filtered_users:
+                    ui.label('Không tìm thấy người dùng').style(f'padding: 24px; text-align: center; color: {TEXT_SUB}; w-full')
+                
+                for i, (u, info) in enumerate(filtered_users.items()):
+                    bg = 'transparent' if i % 2 == 0 else '#1e293b40'
+                    with ui.row().classes('w-full items-center').style(f'padding: 12px 16px; background: {bg}; border-bottom: 1px solid {BORDER}; transition: background 0.2s;'):
+                        ui.label(u).style(f'flex: 2; font-weight: 600; color: {TEXT_MAIN};')
+                        ui.label(info.get('name', '-')).style(f'flex: 2; color: {TEXT_MAIN}; font-size: 0.9rem;')
+                        ui.label(info.get('email', '-')).style(f'flex: 3; color: {TEXT_SUB}; font-size: 0.85rem; word-break: break-all;')
+                        
+                        role = info.get('role', 'user')
+                        role_color = '#ef4444' if role == 'super_admin' else '#f59e0b' if role == 'admin' else '#3b82f6'
+                        with ui.row().style('flex: 1.5;'):
+                            ui.label(role).style(f'background: {role_color}20; color: {role_color}; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; text-transform: uppercase; font-weight: 700; border: 1px solid {role_color}40;')
 
-                    with ui.row().style('flex: 2; justify-content: center; gap: 4px;'):
-                        ui.button(icon='visibility', on_click=lambda u=u: ui.navigate.to(f'/admin/user/{u}')).props('flat dense round size=sm').style('color: #4f8ef7;').tooltip('Xem chi tiết')
-                        ui.button(icon='edit', on_click=lambda u=u: ui.navigate.to(f'/admin/edit/{u}')).props('flat dense round size=sm').style('color: #f59e0b;').tooltip('Sửa thông tin')
-                        ui.button(icon='lock_reset', on_click=lambda u=u: confirm_action('Cấp lại mật khẩu', f'Bạn có chắc muốn cấp lại mật khẩu ngẫu nhiên cho người dùng "{u}"?', lambda u=u: do_reset(u))).props('flat dense round size=sm').style('color: #38bdf8;').tooltip('Cấp lại mật khẩu')
-                        
-                        if role == 'admin':
-                            ui.button(icon='remove_moderator', on_click=lambda u=u: confirm_action('Hủy quyền Admin', f'Bạn có muốn hủy quyền Admin của "{u}"?', lambda u=u: do_toggle_admin(u))).props('flat dense round size=sm').style('color: #ef4444;').tooltip('Hủy quyền Admin')
-                        else:
-                            ui.button(icon='add_moderator', on_click=lambda u=u: confirm_action('Cấp quyền Admin', f'Bạn có muốn thăng cấp "{u}" thành Admin?', lambda u=u: do_toggle_admin(u))).props('flat dense round size=sm').style('color: #22c55e;').tooltip('Cấp quyền Admin')
-                        
-                        ui.button(icon='delete', on_click=lambda u=u: confirm_action('Xóa người dùng', f'Bạn có chắc chắn muốn xóa "{u}" khỏi hệ thống? Hành động này không thể hoàn tác.', lambda u=u: do_delete(u))).props('flat dense round size=sm').style('color: #ef4444;').tooltip('Xóa người dùng')
+                        with ui.row().style('flex: 2; justify-content: center; gap: 4px;'):
+                            ui.button(icon='visibility', on_click=lambda u=u: ui.navigate.to(f'/admin/user/{u}')).props('flat dense round size=sm').style('color: #4f8ef7;').tooltip('Xem chi tiết')
+                            ui.button(icon='edit', on_click=lambda u=u: ui.navigate.to(f'/admin/edit/{u}')).props('flat dense round size=sm').style('color: #f59e0b;').tooltip('Sửa thông tin')
+                            ui.button(icon='lock_reset', on_click=lambda u=u: confirm_action('Cấp lại mật khẩu', f'Bạn có chắc muốn cấp lại mật khẩu ngẫu nhiên cho người dùng "{u}"?', lambda u=u: do_reset(u))).props('flat dense round size=sm').style('color: #38bdf8;').tooltip('Cấp lại mật khẩu')
+                            
+                            if role == 'admin':
+                                if self._is_super():
+                                    ui.button(icon='remove_moderator', on_click=lambda u=u: confirm_action('Hủy quyền Admin', f'Bạn có muốn hủy quyền Admin của "{u}"?', lambda u=u: do_toggle_admin(u))).props('flat dense round size=sm').style('color: #ef4444;').tooltip('Hủy quyền Admin')
+                            else:
+                                if self._is_super(): # CHỈ Super Admin mới có thể nâng cấp user lên Admin
+                                    ui.button(icon='add_moderator', on_click=lambda u=u: confirm_action('Cấp quyền Admin', f'Bạn có muốn thăng cấp "{u}" thành Admin?', lambda u=u: do_toggle_admin(u))).props('flat dense round size=sm').style('color: #22c55e;').tooltip('Cấp quyền Admin')
+                            
+                            # Nút xóa hiển thị dựa trên phân quyền
+                            ui.button(icon='delete', on_click=lambda u=u: confirm_action('Xóa người dùng', f'Bạn có chắc chắn muốn xóa "{u}" khỏi hệ thống?', lambda u=u: do_delete(u))).props('flat dense round size=sm').style('color: #ef4444;').tooltip('Xóa người dùng')
+
+        user_table()
 
     # ── Add dialog ────────────────────────────────────────────────────────
     def _add_dialog(self):
@@ -331,7 +354,8 @@ class AdminPage:
             fname = ui.input('Họ và tên').props('outlined dense').classes('w-full')
             email = ui.input('Email').props('outlined dense').classes('w-full')
             pwd   = ui.input('Mật khẩu *', password=True, password_toggle_button=True).props('outlined dense').classes('w-full')
-            role  = ui.select(['user', 'admin'], value='user', label='Vai trò').props('outlined dense').classes('w-full')
+            role_options = ['user', 'admin'] if self._is_super() else ['user']
+            role  = ui.select(role_options, value='user', label='Vai trò').props('outlined dense').classes('w-full')
 
             def save():
                 if not uname.value.strip() or not pwd.value:
@@ -345,7 +369,6 @@ class AdminPage:
                     'username': uname.value.strip(), 'name': fname.value or uname.value.strip(),
                     'email': email.value, 'password': hashed, 'role': role.value,
                     'avatar': uname.value[0].upper(), 'favorites': [], 'history': [],
-                    'notifications': {'rain': True, 'extreme': True, 'daily': False},
                 }
                 user_store.save_user(new_user)
                 ui.notify(f'Đã thêm: {uname.value}', type='positive')

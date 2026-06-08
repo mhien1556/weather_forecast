@@ -58,14 +58,15 @@ LOGIN_CSS = """
 
 .auth-tabs-wrap {
     display: flex !important;
+    justify-content: center !important;
     border-bottom: 1px solid #22252a;
     padding-bottom: 6px;
     margin-bottom: 1.5rem;
-    gap: 16px !important;
+    gap: 0 !important;
 }
 
 .auth-tab-btn {
-    flex: unset !important;
+    flex: 1 !important;
     font-weight: 500 !important;
     font-size: 0.9rem !important;
     padding: 0.4rem 0.2rem !important;
@@ -153,112 +154,113 @@ LOGIN_CSS = """
 def render_login_content():
     ui.add_css(LOGIN_CSS)
 
-    with ui.card().classes('auth-glass-card').style('color:#fff'):
+    with ui.element('div').classes('auth-page-wrap').style('min-height: 90vh'):
+        with ui.card().classes('auth-glass-card').style('color:#fff'):
 
-        with ui.element('div').classes('auth-icon-wrap'):
-            ui.icon('cloud', size='32px').style('color:#4facfe')
+            with ui.element('div').classes('auth-icon-wrap'):
+                ui.icon('cloud', size='32px').style('color:#4facfe')
 
-        title_el    = ui.label('Thời Tiết').classes('auth-title')
-        subtitle_el = ui.label('Đăng nhập hoặc chọn Bỏ qua để sử dụng ngay').classes('auth-subtitle')
+            title_el    = ui.label('WeatherForecast').classes('auth-title')
+            subtitle_el = ui.label('Đăng nhập hoặc chọn Bỏ qua để sử dụng ngay').classes('auth-subtitle')
 
-        with ui.row().classes('auth-tabs-wrap') as tabs_row:
-            login_btn = ui.button('Đăng nhập', on_click=lambda: _switch('login')) \
-                .classes('auth-tab-btn is-active').props('flat no-caps')
-            reg_btn   = ui.button('Đăng ký',   on_click=lambda: _switch('register')) \
-                .classes('auth-tab-btn').props('flat no-caps')
+            with ui.row().classes('auth-tabs-wrap') as tabs_row:
+                login_btn = ui.button('Đăng nhập', on_click=lambda: _switch('login')) \
+                    .classes('auth-tab-btn is-active').props('flat no-caps')
+                reg_btn   = ui.button('Đăng ký',   on_click=lambda: _switch('register')) \
+                    .classes('auth-tab-btn').props('flat no-caps')
 
-        err = ui.label('').classes('auth-error').style('display:none')
-        suc = ui.label('').classes('auth-success').style('display:none')
+            err = ui.label('').classes('auth-error').style('display:none')
+            suc = ui.label('').classes('auth-success').style('display:none')
 
-        # ── Giao diện Login ──────────────────────────────────
-        with ui.element('div') as login_form:
-            l_user = ui.input('Tên đăng nhập').classes('auth-input').props('outlined dark')
-            l_pass = ui.input('Mật khẩu', password=True, password_toggle_button=True) \
-                .classes('auth-input').props('outlined dark')
+            # ── Giao diện Login ──────────────────────────────────
+            with ui.element('div') as login_form:
+                l_user = ui.input('Tên đăng nhập').classes('auth-input').props('outlined dark')
+                l_pass = ui.input('Mật khẩu', password=True, password_toggle_button=True) \
+                    .classes('auth-input').props('outlined dark')
 
-            ui.button('Quên mật khẩu?', on_click=lambda: _switch('forgot_step1')) \
-                .classes('forgot-link-btn').props('flat no-caps dense')
+                ui.button('Quên mật khẩu?', on_click=lambda: _switch('forgot_step1')) \
+                    .classes('forgot-link-btn').props('flat no-caps dense')
 
-            def do_login():
-                _hide_all(err, suc)
-                user = login(l_user.value.strip(), l_pass.value)
-                if user:
-                    set_current_user(user)
-                    ui.notify('Đăng nhập thành công! 👋', type='positive', position='top')
-                    ui.navigate.to('/')
-                else:
-                    _show_err(err, 'Sai tên đăng nhập hoặc mật khẩu!')
+                def do_login():
+                    _hide_all(err, suc)
+                    user = login(l_user.value.strip(), l_pass.value)
+                    if user:
+                        set_current_user(user)
+                        ui.notify('Đăng nhập thành công! 👋', type='positive', position='top')
+                        ui.navigate.to('/')
+                    else:
+                        _show_err(err, 'Sai tên đăng nhập hoặc mật khẩu!')
 
-            ui.button('Đăng nhập', on_click=do_login).classes('auth-submit-btn').props('unelevated no-caps')
-            
-            # ✨ NÚT BẤM BYPASS: Bấm phát ăn ngay, vào thẳng app làm khách
-            ui.button('Bỏ qua đăng nhập ➔', on_click=lambda: _bypass_login()) \
-                .classes('w-full mt-3 text-gray-400 text-xs text-center block hover:text-white').props('flat no-caps')
+                ui.button('Đăng nhập', on_click=do_login).classes('auth-submit-btn').props('unelevated no-caps')
+                
+                # ✨ NÚT BẤM BYPASS: Bấm phát ăn ngay, vào thẳng app làm khách
+                ui.button('Bỏ qua đăng nhập ➔', on_click=lambda: _bypass_login()) \
+                    .classes('w-full mt-3 text-gray-400 text-xs text-center block hover:text-white').props('flat no-caps')
 
-        # ── Giao diện Đăng ký ──────────────────
-        with ui.element('div').style('display:none') as reg_form:
-            r_name  = ui.input('Họ và tên').classes('auth-input').props('outlined dark')
-            r_user  = ui.input('Tên đăng nhập').classes('auth-input').props('outlined dark')
-            r_email = ui.input('Email').classes('auth-input').props('outlined dark')
-            r_pass  = ui.input('Mật khẩu', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
+            # ── Giao diện Đăng ký ──────────────────
+            with ui.element('div').style('display:none') as reg_form:
+                r_name  = ui.input('Họ và tên').classes('auth-input').props('outlined dark')
+                r_user  = ui.input('Tên đăng nhập').classes('auth-input').props('outlined dark')
+                r_email = ui.input('Email').classes('auth-input').props('outlined dark')
+                r_pass  = ui.input('Mật khẩu', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
 
-            r_question = ui.select(SECURITY_QUESTIONS, value=SECURITY_QUESTIONS[0]).classes('auth-input').props('outlined dark')
-            r_answer = ui.input('Câu trả lời bảo mật').classes('auth-input').props('outlined dark')
+                r_question = ui.select(SECURITY_QUESTIONS, value=SECURITY_QUESTIONS[0]).classes('auth-input').props('outlined dark')
+                r_answer = ui.input('Câu trả lời bảo mật').classes('auth-input').props('outlined dark')
 
-            def do_register():
-                _hide_all(err, suc)
-                if not r_name.value or not r_user.value or not r_pass.value or not r_answer.value:
-                    _show_err(err, 'Vui lòng điền đầy đủ thông tin!')
-                    return
-                user = register(r_user.value.strip(), r_name.value.strip(), r_email.value.strip(), r_pass.value, r_question.value, r_answer.value)
-                if user:
-                    _switch('login')
-                    _show_suc(suc, 'Đăng ký tài khoản thành công!')
-                else:
-                    _show_err(err, 'Tên đăng nhập đã tồn tại!')
+                def do_register():
+                    _hide_all(err, suc)
+                    if not r_name.value or not r_user.value or not r_pass.value or not r_answer.value:
+                        _show_err(err, 'Vui lòng điền đầy đủ thông tin!')
+                        return
+                    user = register(r_user.value.strip(), r_name.value.strip(), r_email.value.strip(), r_pass.value, r_question.value, r_answer.value)
+                    if user:
+                        _switch('login')
+                        _show_suc(suc, 'Đăng ký tài khoản thành công!')
+                    else:
+                        _show_err(err, 'Tên đăng nhập đã tồn tại!')
 
-            ui.button('Tạo tài khoản', on_click=do_register).classes('auth-submit-btn').props('unelevated no-caps')
+                ui.button('Tạo tài khoản', on_click=do_register).classes('auth-submit-btn').props('unelevated no-caps')
 
-        # ── Quên mật khẩu - Bước 1 ──────
-        with ui.element('div').style('display:none') as forgot1_form:
-            f_user = ui.input('Nhập tên đăng nhập').classes('auth-input').props('outlined dark')
+            # ── Quên mật khẩu - Bước 1 ──────
+            with ui.element('div').style('display:none') as forgot1_form:
+                f_user = ui.input('Nhập tên đăng nhập').classes('auth-input').props('outlined dark')
 
-            def do_forgot1():
-                _hide_all(err, suc)
-                username = f_user.value.strip()
-                q = get_security_question(username)
-                if not q:
-                    _show_err(err, 'Tài khoản không tồn tại!')
-                    return
-                forgot_state['username'] = username
-                forgot_state['question'] = q
-                _switch('forgot_step2')
+                def do_forgot1():
+                    _hide_all(err, suc)
+                    username = f_user.value.strip()
+                    q = get_security_question(username)
+                    if not q:
+                        _show_err(err, 'Tài khoản không tồn tại!')
+                        return
+                    forgot_state['username'] = username
+                    forgot_state['question'] = q
+                    _switch('forgot_step2')
 
-            ui.button('Tiếp theo', on_click=do_forgot1).classes('auth-submit-btn').props('unelevated no-caps')
-            ui.label('← Quay lại đăng nhập').classes('back-link').on('click', lambda: _switch('login'))
+                ui.button('Tiếp theo', on_click=do_forgot1).classes('auth-submit-btn').props('unelevated no-caps')
+                ui.label('← Quay lại đăng nhập').classes('back-link').on('click', lambda: _switch('login'))
 
-        # ── Quên mật khẩu - Bước 2 ──────
-        with ui.element('div').style('display:none') as forgot2_form:
-            question_label = ui.label('').classes('text-xs text-gray-400 mb-2 block')
-            f_answer  = ui.input('Câu trả lời').classes('auth-input').props('outlined dark')
-            f_newpass = ui.input('Mật khẩu mới', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
-            f_confirm = ui.input('Xác nhận mật khẩu mới', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
+            # ── Quên mật khẩu - Bước 2 ──────
+            with ui.element('div').style('display:none') as forgot2_form:
+                question_label = ui.label('').classes('text-xs text-gray-400 mb-2 block')
+                f_answer  = ui.input('Câu trả lời').classes('auth-input').props('outlined dark')
+                f_newpass = ui.input('Mật khẩu mới', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
+                f_confirm = ui.input('Xác nhận mật khẩu mới', password=True, password_toggle_button=True).classes('auth-input').props('outlined dark')
 
-            def do_reset():
-                _hide_all(err, suc)
-                username = forgot_state.get('username', '')
-                if f_newpass.value != f_confirm.value:
-                    _show_err(err, 'Mật khẩu xác nhận không khớp!')
-                    return
-                if not verify_security(username, f_answer.value):
-                    _show_err(err, 'Câu trả lời bảo mật không chính xác!')
-                    return
-                reset_password(username, f_newpass.value)
-                _show_suc(suc, 'Cập nhật mật khẩu mới thành công!')
-                ui.timer(1.5, lambda: _switch('login'), once=True)
+                def do_reset():
+                    _hide_all(err, suc)
+                    username = forgot_state.get('username', '')
+                    if f_newpass.value != f_confirm.value:
+                        _show_err(err, 'Mật khẩu xác nhận không khớp!')
+                        return
+                    if not verify_security(username, f_answer.value):
+                        _show_err(err, 'Câu trả lời bảo mật không chính xác!')
+                        return
+                    reset_password(username, f_newpass.value)
+                    _show_suc(suc, 'Cập nhật mật khẩu mới thành công!')
+                    ui.timer(1.5, lambda: _switch('login'), once=True)
 
-            ui.button('Đặt lại mật khẩu', on_click=do_reset).classes('auth-submit-btn').props('unelevated no-caps')
-            ui.label('← Quay lại').classes('back-link').on('click', lambda: _switch('forgot_step1'))
+                ui.button('Đặt lại mật khẩu', on_click=do_reset).classes('auth-submit-btn').props('unelevated no-caps')
+                ui.label('← Quay lại').classes('back-link').on('click', lambda: _switch('forgot_step1'))
 
         # ── State & switch logic ───────────────────────────
         forgot_state = {}
@@ -282,7 +284,7 @@ def render_login_content():
 
             if tab == 'login':
                 login_btn.classes(add='is-active'); reg_btn.classes(remove='is-active')
-                title_el.set_text('Thời Tiết')
+                title_el.set_text('WeatherForecast')
                 subtitle_el.set_text('Đăng nhập hoặc chọn Bỏ qua để sử dụng ngay')
             elif tab == 'register':
                 reg_btn.classes(add='is-active'); login_btn.classes(remove='is-active')

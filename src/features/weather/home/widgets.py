@@ -9,81 +9,19 @@ from src.common.units import (
     format_visibility,
     format_wind_from_ms,
 )
-from src.common.utils import lucide_to_material
-from src.database.user_store import get_favorites, add_favorite, remove_favorite, get_notifications
-
-
-def render_smart_alerts(weather: dict, username: str):
-    if not username:
-        return
-
-    notifications = get_notifications(username)
-    alerts = []
-
-    desc = weather.get('desc', '').lower()
-    pop = weather.get('pop', 0)
-    is_raining = 'mưa' in desc or pop > 50
-
-    if notifications.get('rain') and is_raining:
-        alerts.append({
-            'icon': 'water_drop',
-            'color': '#3b82f6',
-            'bg': 'rgba(59, 130, 246, 0.1)',
-            'border': 'rgba(59, 130, 246, 0.2)',
-            'title': 'Cảnh báo Mưa',
-            'msg': 'Trời có thể mưa hôm nay, hãy nhớ mang theo ô hoặc áo mưa nhé!'
-        })
-
-    temp = weather.get('temp', 25)
-    wind = weather.get('wind', 0)
-
-    if notifications.get('extreme'):
-        if temp >= 35:
-            alerts.append({
-                'icon': 'local_fire_department',
-                'color': '#ef4444',
-                'bg': 'rgba(239, 68, 68, 0.1)',
-                'border': 'rgba(239, 68, 68, 0.2)',
-                'title': 'Nắng nóng gay gắt',
-                'msg': f'Nhiệt độ ngoài trời rất cao ({temp}°C). Hạn chế ra đường vào buổi trưa và nhớ uống nhiều nước!'
-            })
-        elif temp <= 10:
-            alerts.append({
-                'icon': 'ac_unit',
-                'color': '#0ea5e9',
-                'bg': 'rgba(14, 165, 233, 0.1)',
-                'border': 'rgba(14, 165, 233, 0.2)',
-                'title': 'Rét đậm',
-                'msg': f'Nhiệt độ ngoài trời rất thấp ({temp}°C). Hãy mặc thật ấm trước khi ra ngoài!'
-            })
-        elif wind >= 10.8:
-            alerts.append({
-                'icon': 'air',
-                'color': '#f59e0b',
-                'bg': 'rgba(245, 158, 11, 0.1)',
-                'border': 'rgba(245, 158, 11, 0.2)',
-                'title': 'Gió giật mạnh',
-                'msg': 'Có gió lớn và gió giật mạnh. Chú ý an toàn khi tham gia giao thông!'
-            })
-
-    if alerts:
-        with ui.element('div').classes('w-full flex flex-col gap-3 mb-4'):
-            for a in alerts:
-                with ui.element('div').classes('rounded-xl p-3 flex gap-3 items-center shadow-md').style(f'background: {a["bg"]}; border: 1px solid {a["border"]}; border-left: 4px solid {a["color"]};'):
-                    ui.icon(a['icon']).style(f'color: {a["color"]}; font-size: 28px;')
-                    with ui.column().classes('gap-0'):
-                        ui.label(a['title']).style(f'color: {a["color"]}; font-weight: 700; font-size: 1rem;')
-                        ui.label(a['msg']).style('color: inherit; font-size: 0.9rem; opacity: 0.8;')
+from src.common.utils import lucide_to_material, get_weather_color
+from src.database.user_store import get_favorites, add_favorite, remove_favorite
 
 
 def render_hero(weather: dict):
     city_name = weather.get('city_name', 'N/A')
     user = get_current_user()
+    w_color = get_weather_color(weather.get('icon'))
 
     with ui.element('div').classes('hero-section'):
         with ui.element('div').classes('location-info'):
             with ui.element('div').classes('location-header flex items-center gap-2'):
-                ui.icon('place').style('color:#4facfe;font-size:24px')
+                ui.icon('place').style('color:var(--accent-color);font-size:24px')
                 ui.label(city_name).style('font-size:2.5rem;font-weight:700')
 
                 if user:
@@ -110,7 +48,7 @@ def render_hero(weather: dict):
         with ui.element('div').classes('current-temp-large'):
             with ui.element('div').classes('temp-row flex items-center gap-4'):
                 # ✅ ĐÃ SỬA: Đổi icon mặc định thành 'sunny' thay vì 'cloud'
-                ui.icon(lucide_to_material(weather.get('lucide_icon', 'sunny'))).style('font-size:80px;color:#fff')
+                ui.icon(lucide_to_material(weather.get('lucide_icon', 'sunny'))).style(f'font-size:80px;color:{w_color}')
                 ui.label(format_temp(weather.get('temp'))).classes('temp-value')
             with ui.element('div').classes('condition-info flex items-center gap-1'):
                 ui.label(weather.get('desc', ''))
@@ -216,7 +154,7 @@ def render_dashboard(weather: dict):
                 ui.icon('calendar_month', size='48px').classes('text-blue-400')
                 ui.label('Lên kế hoạch tuần mới?').classes('text-lg font-bold text-center')
                 ui.label('Xem ngay phân tích dự báo xu hướng thời tiết 7 ngày tới.').classes('text-sm opacity-80 text-center px-2')
-                ui.button('Xem dự báo 7 ngày', on_click=lambda: ui.navigate.to('/forecast')).classes('w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold py-3 rounded-xl shadow-md mt-4')
+                ui.button('Xem dự báo 7 ngày', on_click=lambda: ui.navigate.to('/forecast')).classes('w-full text-white font-semibold py-3 rounded-xl shadow-md mt-4').style('background:var(--accent-color)')
 
 
 def render_forecast_sidebar(daily: list):

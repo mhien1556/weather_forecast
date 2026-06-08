@@ -12,12 +12,17 @@ _DEFAULTS = {
     'unit_pressure':   'hPa',    # 'hPa' | 'mmHg'
     'unit_visibility': 'km',     # 'km' | 'miles'
     'theme':           'dark',   # 'dark' | 'light'
+    'language':        'vi',     # 'vi' | 'en'
 }
 
 
 def get_units() -> dict:
     """Trả về dict cài đặt đơn vị hiện tại từ storage."""
-    return {k: app.storage.user.get(k, v) for k, v in _DEFAULTS.items()}
+    try:
+        return {k: app.storage.user.get(k, v) for k, v in _DEFAULTS.items()}
+    except RuntimeError:
+        # Fallback khi chạy ngoài UI context (như background scheduler)
+        return _DEFAULTS.copy()
 
 
 # ── Conversion ─────────────────────────────────────────────────────────────────
@@ -139,4 +144,3 @@ class RefreshRegistry:
     @classmethod
     def clear(cls, client_id):
         cls._callbacks.pop(client_id, None)
-

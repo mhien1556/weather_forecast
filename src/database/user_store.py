@@ -29,7 +29,7 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
 
-    # ── Bảng 1: users (thông tin chính) ──
+    # ── Bảng 1: users ──
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
@@ -42,14 +42,12 @@ def init_db():
             security_answer TEXT,
             created_at TEXT,
             updated_at TEXT,
-            -- Giữ lại cột cũ để tương thích migration
             favorites TEXT,
-            history TEXT,
-            notifications TEXT
+            history TEXT
         )
     ''')
 
-    # ── Bảng 2: user_settings (cài đặt giao diện & đơn vị) ──
+    # ── Bảng 2: user_settings ──
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_settings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,11 +58,12 @@ def init_db():
             unit_pressure TEXT DEFAULT 'hPa',
             unit_visibility TEXT DEFAULT 'km',
             dynamic_bg INTEGER DEFAULT 1,
+            language TEXT DEFAULT 'vi',
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         )
     ''')
 
-    # ── Bảng 3: search_history (lịch sử tìm kiếm) ──
+    # ── Bảng 3: search_history ──
     c.execute('''
         CREATE TABLE IF NOT EXISTS search_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +75,7 @@ def init_db():
         )
     ''')
 
-    # ── Bảng 4: favorite_cities (thành phố yêu thích) ──
+    # ── Bảng 4: favorite_cities ──
     c.execute('''
         CREATE TABLE IF NOT EXISTS favorite_cities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,29 +87,10 @@ def init_db():
         )
     ''')
 
-    # ── Bảng 5: notification_settings (cài đặt thông báo) ──
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS notification_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            rain_alert INTEGER DEFAULT 1,
-            extreme_alert INTEGER DEFAULT 1,
-            daily_report INTEGER DEFAULT 0,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-        )
-    ''')
-
-    # ── Thêm cột created_at, updated_at nếu bảng users cũ chưa có ──
-    try:
-        c.execute("SELECT created_at FROM users LIMIT 1")
-    except sqlite3.OperationalError:
-        c.execute("ALTER TABLE users ADD COLUMN created_at TEXT")
-        c.execute("ALTER TABLE users ADD COLUMN updated_at TEXT")
-
-    # ── Migration: chuyển dữ liệu JSON cũ sang bảng mới ──
+    # ── Migration dữ liệu cũ từ JSON sang bảng mới ──
     _migrate_old_data(c)
 
-    # ── Khởi tạo tài khoản admin mặc định nếu chưa có ──
+    # ── Khởi tạo admin mặc định ──
     c.execute("SELECT COUNT(*) FROM users")
     count = c.fetchone()[0]
     if count == 0:
@@ -124,29 +104,24 @@ def init_db():
             'super_admin', 'A', '', '', now, now
         ))
         c.execute('''
-            INSERT OR IGNORE INTO notification_settings (username, rain_alert, extreme_alert, daily_report)
-            VALUES (?, 1, 1, 0)
-        ''', ('admin',))
-        c.execute('''
             INSERT OR IGNORE INTO user_settings (username) VALUES (?)
         ''', ('admin',))
 
     conn.commit()
     conn.close()
 
-
 def _migrate_old_data(cursor):
-    """Migrate dữ liệu từ JSON columns (favorites, history, notifications) sang bảng mới."""
+    """Migrate dữ liệu từ JSON columns sang bảng mới."""
     try:
-        cursor.execute("SELECT username, favorites, history, notifications FROM users")
+        cursor.execute("SELECT username, favorites, history FROM users")
     except sqlite3.OperationalError:
-        return  # Bảng users chưa có cột cũ → không cần migrate
+        return
 
     rows = cursor.fetchall()
     for row in rows:
         username = row['username']
         
-        # ── Migrate favorites ──
+        # Migrate favorites
         try:
             favs = json.loads(row['favorites'] or '[]')
             if isinstance(favs, list):
@@ -160,11 +135,10 @@ def _migrate_old_data(cursor):
         except (json.JSONDecodeError, TypeError):
             pass
 
-        # ── Migrate history ──
+        # Migrate history
         try:
             hist = json.loads(row['history'] or '[]')
             if isinstance(hist, list):
-                # Kiểm tra xem đã migrate chưa
                 cursor.execute("SELECT COUNT(*) FROM search_history WHERE username = ?", (username,))
                 if cursor.fetchone()[0] == 0:
                     for entry in hist:
@@ -176,28 +150,12 @@ def _migrate_old_data(cursor):
         except (json.JSONDecodeError, TypeError):
             pass
 
-        # ── Migrate notifications ──
-        try:
-            notifs = json.loads(row['notifications'] or '{}')
-            if isinstance(notifs, dict):
-                cursor.execute('''
-                    INSERT OR IGNORE INTO notification_settings (username, rain_alert, extreme_alert, daily_report)
-                    VALUES (?, ?, ?, ?)
-                ''', (
-                    username,
-                    1 if notifs.get('rain', True) else 0,
-                    1 if notifs.get('extreme', True) else 0,
-                    1 if notifs.get('daily', False) else 0,
-                ))
-        except (json.JSONDecodeError, TypeError):
-            pass
-
-        # ── Tạo user_settings mặc định nếu chưa có ──
+        # Tạo user_settings mặc định
         cursor.execute('''
             INSERT OR IGNORE INTO user_settings (username) VALUES (?)
         ''', (username,))
 
-        # ── Cập nhật timestamp nếu chưa có ──
+        # Cập nhật timestamp nếu chưa có
         cursor.execute("SELECT created_at FROM users WHERE username = ?", (username,))
         r = cursor.fetchone()
         if r and not r['created_at']:
@@ -205,18 +163,15 @@ def _migrate_old_data(cursor):
             cursor.execute("UPDATE users SET created_at = ?, updated_at = ? WHERE username = ?",
                            (now, now, username))
 
-
 # ── Hàm tiện ích ──────────────────────────────────────────────────────────────
 
 def _hash(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
-
 def _row_to_dict(row) -> dict:
     if not row:
         return None
     return dict(row)
-
 
 # ── CRUD Users ────────────────────────────────────────────────────────────────
 
@@ -228,21 +183,17 @@ def get_all_users() -> dict:
     result = {}
     for r in rows:
         d = dict(r)
-        # Đính kèm favorites, history, notifications từ bảng mới
         d['favorites'] = get_favorites(d['username'])
         d['history'] = get_history(d['username'])
-        d['notifications'] = get_notifications(d['username'])
         result[d['username']] = d
     conn.close()
     return result
-
 
 def save_user(user_dict: dict) -> None:
     conn = get_connection()
     c = conn.cursor()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # Kiểm tra user đã tồn tại chưa
     c.execute("SELECT username FROM users WHERE username = ?", (user_dict['username'],))
     exists = c.fetchone()
     
@@ -279,19 +230,8 @@ def save_user(user_dict: dict) -> None:
             now, now,
         ))
 
-    # Đảm bảo có bản ghi ở bảng liên quan
     c.execute("INSERT OR IGNORE INTO user_settings (username) VALUES (?)", (user_dict['username'],))
-    c.execute('''
-        INSERT OR IGNORE INTO notification_settings (username, rain_alert, extreme_alert, daily_report)
-        VALUES (?, ?, ?, ?)
-    ''', (
-        user_dict['username'],
-        1 if user_dict.get('notifications', {}).get('rain', True) else 0,
-        1 if user_dict.get('notifications', {}).get('extreme', True) else 0,
-        1 if user_dict.get('notifications', {}).get('daily', False) else 0,
-    ))
 
-    # Nếu có favorites trong dict, đồng bộ sang bảng mới
     if 'favorites' in user_dict and isinstance(user_dict['favorites'], list):
         for city in user_dict['favorites']:
             if city:
@@ -303,15 +243,12 @@ def save_user(user_dict: dict) -> None:
     conn.commit()
     conn.close()
 
-
 def delete_user(username: str) -> None:
     conn = get_connection()
     c = conn.cursor()
-    # CASCADE sẽ tự xóa dữ liệu liên quan
     c.execute("DELETE FROM users WHERE username = ?", (username,))
     conn.commit()
     conn.close()
-
 
 def get_user(username: str) -> dict | None:
     conn = get_connection()
@@ -326,9 +263,7 @@ def get_user(username: str) -> dict | None:
     d = dict(row)
     d['favorites'] = get_favorites(username)
     d['history'] = get_history(username)
-    d['notifications'] = get_notifications(username)
     return d
-
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -337,7 +272,6 @@ def login(username: str, password: str) -> dict | None:
     if user and user['password'] == _hash(password):
         return user
     return None
-
 
 def register(username: str, display_name: str, email: str, password: str,
              security_question: str = '', security_answer: str = '') -> dict | None:
@@ -364,15 +298,10 @@ def register(username: str, display_name: str, email: str, password: str,
     ))
 
     c.execute("INSERT INTO user_settings (username) VALUES (?)", (username,))
-    c.execute('''
-        INSERT INTO notification_settings (username, rain_alert, extreme_alert, daily_report)
-        VALUES (?, 1, 1, 0)
-    ''', (username,))
 
     conn.commit()
     conn.close()
     return get_user(username)
-
 
 # ── Profile ───────────────────────────────────────────────────────────────────
 
@@ -391,7 +320,6 @@ def update_profile(username: str, name: str, email: str) -> bool:
     conn.close()
     return True
 
-
 def change_password(username: str, old_pass: str, new_pass: str) -> bool:
     user = get_user(username)
     if not user or user['password'] != _hash(old_pass):
@@ -405,13 +333,11 @@ def change_password(username: str, old_pass: str, new_pass: str) -> bool:
     conn.close()
     return True
 
-
 def verify_security(username: str, answer: str) -> bool:
     user = get_user(username)
     if not user or not user.get('security_answer'):
         return False
     return user['security_answer'] == _hash(answer.strip().lower())
-
 
 def reset_password(username: str, new_password: str) -> bool:
     conn = get_connection()
@@ -427,7 +353,6 @@ def reset_password(username: str, new_password: str) -> bool:
     conn.close()
     return True
 
-
 def get_security_question(username: str) -> str | None:
     conn = get_connection()
     c = conn.cursor()
@@ -438,15 +363,13 @@ def get_security_question(username: str) -> str | None:
         return row['security_question']
     return None
 
-
-# ── Search History (bảng search_history) ──────────────────────────────────────
+# ── Search History ───────────────────────────────────────────────────────────
 
 def add_history(username: str, city: str, weather_brief: str = '') -> None:
     conn = get_connection()
     c = conn.cursor()
     now = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    # Xóa bản ghi cũ cùng thành phố (giữ mới nhất)
     c.execute("DELETE FROM search_history WHERE username = ? AND LOWER(city) = LOWER(?)",
               (username, city))
 
@@ -455,7 +378,6 @@ def add_history(username: str, city: str, weather_brief: str = '') -> None:
         VALUES (?, ?, ?, ?)
     ''', (username, city, weather_brief, now))
 
-    # Giữ tối đa 20 bản ghi
     c.execute('''
         DELETE FROM search_history WHERE id NOT IN (
             SELECT id FROM search_history WHERE username = ?
@@ -465,7 +387,6 @@ def add_history(username: str, city: str, weather_brief: str = '') -> None:
 
     conn.commit()
     conn.close()
-
 
 def get_history(username: str) -> list:
     conn = get_connection()
@@ -477,7 +398,6 @@ def get_history(username: str) -> list:
     conn.close()
     return [dict(r) for r in rows]
 
-
 def clear_history(username: str) -> None:
     conn = get_connection()
     c = conn.cursor()
@@ -485,8 +405,7 @@ def clear_history(username: str) -> None:
     conn.commit()
     conn.close()
 
-
-# ── Favorites (bảng favorite_cities) ──────────────────────────────────────────
+# ── Favorites ────────────────────────────────────────────────────────────────
 
 def get_favorites(username: str) -> list:
     conn = get_connection()
@@ -495,7 +414,6 @@ def get_favorites(username: str) -> list:
     rows = c.fetchall()
     conn.close()
     return [r['city'] for r in rows]
-
 
 def add_favorite(username: str, city: str) -> bool:
     conn = get_connection()
@@ -513,7 +431,6 @@ def add_favorite(username: str, city: str) -> bool:
     conn.close()
     return inserted
 
-
 def remove_favorite(username: str, city: str) -> None:
     conn = get_connection()
     c = conn.cursor()
@@ -521,50 +438,9 @@ def remove_favorite(username: str, city: str) -> None:
     conn.commit()
     conn.close()
 
-
-# ── Notifications (bảng notification_settings) ───────────────────────────────
-
-def get_notifications(username: str) -> dict:
-    default = {'rain': True, 'extreme': True, 'daily': False}
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT rain_alert, extreme_alert, daily_report FROM notification_settings WHERE username = ?",
-              (username,))
-    row = c.fetchone()
-    conn.close()
-    if not row:
-        return default
-    return {
-        'rain': bool(row['rain_alert']),
-        'extreme': bool(row['extreme_alert']),
-        'daily': bool(row['daily_report']),
-    }
-
-
-def update_notifications(username: str, settings: dict) -> None:
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO notification_settings (username, rain_alert, extreme_alert, daily_report)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT(username) DO UPDATE SET
-            rain_alert = excluded.rain_alert,
-            extreme_alert = excluded.extreme_alert,
-            daily_report = excluded.daily_report
-    ''', (
-        username,
-        1 if settings.get('rain', True) else 0,
-        1 if settings.get('extreme', True) else 0,
-        1 if settings.get('daily', False) else 0,
-    ))
-    conn.commit()
-    conn.close()
-
-
-# ── User Settings (bảng user_settings) ───────────────────────────────────────
+# ── User Settings ────────────────────────────────────────────────────────────
 
 def get_user_settings(username: str) -> dict:
-    """Trả về cài đặt giao diện & đơn vị từ DB."""
     defaults = {
         'theme': 'dark',
         'unit_temp': 'C',
@@ -572,10 +448,11 @@ def get_user_settings(username: str) -> dict:
         'unit_pressure': 'hPa',
         'unit_visibility': 'km',
         'dynamic_bg': True,
+        'language': 'vi',
     }
     conn = get_connection()
     c = conn.cursor()
-    c.execute("""SELECT theme, unit_temp, unit_wind, unit_pressure, unit_visibility, dynamic_bg
+    c.execute("""SELECT theme, unit_temp, unit_wind, unit_pressure, unit_visibility, dynamic_bg, language
                  FROM user_settings WHERE username = ?""", (username,))
     row = c.fetchone()
     conn.close()
@@ -588,23 +465,23 @@ def get_user_settings(username: str) -> dict:
         'unit_pressure': row['unit_pressure'] or 'hPa',
         'unit_visibility': row['unit_visibility'] or 'km',
         'dynamic_bg': bool(row['dynamic_bg']),
+        'language': row['language'] or 'vi',
     }
 
-
 def update_user_settings(username: str, settings: dict) -> None:
-    """Cập nhật cài đặt giao diện & đơn vị vào DB."""
     conn = get_connection()
     c = conn.cursor()
     c.execute('''
-        INSERT INTO user_settings (username, theme, unit_temp, unit_wind, unit_pressure, unit_visibility, dynamic_bg)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO user_settings (username, theme, unit_temp, unit_wind, unit_pressure, unit_visibility, dynamic_bg, language)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(username) DO UPDATE SET
             theme = excluded.theme,
             unit_temp = excluded.unit_temp,
             unit_wind = excluded.unit_wind,
             unit_pressure = excluded.unit_pressure,
             unit_visibility = excluded.unit_visibility,
-            dynamic_bg = excluded.dynamic_bg
+            dynamic_bg = excluded.dynamic_bg,
+            language = excluded.language
     ''', (
         username,
         settings.get('theme', 'dark'),
@@ -613,10 +490,10 @@ def update_user_settings(username: str, settings: dict) -> None:
         settings.get('unit_pressure', 'hPa'),
         settings.get('unit_visibility', 'km'),
         1 if settings.get('dynamic_bg', True) else 0,
+        settings.get('language', 'vi'),
     ))
     conn.commit()
     conn.close()
-
 
 # Khởi tạo db khi module được import
 init_db()

@@ -72,12 +72,12 @@ def _probe_tile_valid(layer_key: str, api_key: str, unix_ts: int) -> bool:
 
 def detect_owm_max_timestamp(api_key: str, layer_key: str = 'temp_new') -> int:
     """OWM thường có tile đến ~48h tương lai — hardcode thay vì probe từng bước."""
-    return _now_ts() + 48 * 3600
+    return _now_ts() + _OWM_TILE_MAX_FUTURE
 
 
 def build_timeline(hourly: list, api_key: str = '') -> list[int]:
     now = _now_ts()
-    past_start = now - 8 * MAP_STEP_SECONDS
+    past_start = now - _OWM_TILE_MAX_PAST
     max_ts = detect_owm_max_timestamp(api_key) if api_key else now + 48 * 3600
 
     if hourly:

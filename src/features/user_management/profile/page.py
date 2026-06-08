@@ -6,6 +6,7 @@ from src.database.user_store import (
     get_history, clear_history,
     get_favorites, add_favorite, remove_favorite,
 )
+from datetime import datetime
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
@@ -164,11 +165,8 @@ def register():
             navbar('/profile')
 
             with ui.element('div').classes('pf-page'):
-
-                # ── Hero Card ─────────────────────────────────
+                # Hero Card
                 with ui.element('div').classes('pf-hero'):
-
-                    # Avatar hiển thị tĩnh (không upload)
                     avatar_data = user.get('avatar', '?')
                     with ui.element('div').classes('pf-avatar-wrap'):
                         with ui.element('div').classes('pf-avatar'):
@@ -186,7 +184,7 @@ def register():
                         on_click=lambda: [logout_user(), ui.navigate.to('/')]) \
                         .classes('pf-btn-logout').props('flat no-caps')
 
-                # ── Tabs Navigation ───────────────────────────
+                # Tabs Navigation
                 with ui.row().classes('pf-tabs w-full'):
                     tabs_config = [
                         ('info', 'person', 'Cá nhân'),
@@ -201,112 +199,144 @@ def register():
                                 ui.icon(icon_name, size='20px')
                                 ui.label(lbl)
 
-                # ── Content Area ──────────────────────────────
+                # Content Area
                 with ui.column().classes('w-full').style('gap:0'):
-                    if   tab == 'info':       _info(uname, user)
-                    elif tab == 'history':    _history(uname)
-                    elif tab == 'favorites':  _favorites(uname)
+                    if   tab == 'info':          _info(uname, user)
+                    elif tab == 'history':       _history(uname)
+                    elif tab == 'favorites':     _favorites(uname)
 
             footer()
-
 
 def _info(uname, user):
     with ui.element('div').classes('pf-card'):
         ui.label('Thông tin cá nhân').classes('pf-section-title')
-
-        f_name  = ui.input('Họ và tên', value=user.get('name','')) \
-                    .classes('pf-inp w-full mb-4').props('outlined dark')
-        f_email = ui.input('Email',     value=user.get('email','')) \
-                    .classes('pf-inp w-full mb-4').props('outlined dark')
+        f_name  = ui.input('Họ và tên', value=user.get('name','')).classes('pf-inp w-full mb-4').props('outlined dark')
+        f_email = ui.input('Email',     value=user.get('email','')).classes('pf-inp w-full mb-4').props('outlined dark')
         note = ui.label('').classes('pf-note-ok')
-
         def save():
             if not f_name.value.strip():
-                note.classes(remove='pf-note-ok').classes(add='pf-note-err')
-                note.set_text('❌ Tên không được để trống!'); return
-            
-            current_avatar = user.get('avatar', f_name.value.strip()[0].upper())
+                note.classes(remove='pf-note-ok').classes(add='pf-note-err'); note.set_text('❌ Tên không được để trống!'); return
             update_profile(uname, f_name.value, f_email.value)
-            
-            set_current_user({**user, 'name': f_name.value.strip(),
-                              'email': f_email.value.strip(),
-                              'avatar': current_avatar})
-            note.classes(remove='pf-err').classes(add='pf-note-ok')
-            note.set_text('✅ Đã lưu thành công!')
-            ui.navigate.to('/profile?tab=info')
-
+            set_current_user({**user, 'name': f_name.value.strip(), 'email': f_email.value.strip()})
+            note.classes(remove='pf-err').classes(add='pf-note-ok'); note.set_text('✅ Đã lưu thành công!')
         ui.button('Lưu thay đổi', on_click=save).classes('pf-btn-primary').props('unelevated no-caps')
 
     with ui.element('div').classes('pf-card'):
         ui.label('Đổi mật khẩu').classes('pf-section-title')
-
-        p_old  = ui.input('Mật khẩu hiện tại', password=True, password_toggle_button=True) \
-                    .classes('pf-inp w-full mb-4').props('outlined dark')
-        p_new  = ui.input('Mật khẩu mới',      password=True, password_toggle_button=True) \
-                    .classes('pf-inp w-full mb-4').props('outlined dark')
-        p_cf   = ui.input('Xác nhận mật khẩu', password=True, password_toggle_button=True) \
-                    .classes('pf-inp w-full mb-4').props('outlined dark')
+        p_old  = ui.input('Mật khẩu hiện tại', password=True, password_toggle_button=True).classes('pf-inp w-full mb-4').props('outlined dark')
+        p_new  = ui.input('Mật khẩu mới', password=True, password_toggle_button=True).classes('pf-inp w-full mb-4').props('outlined dark')
+        p_cf   = ui.input('Xác nhận mật khẩu', password=True, password_toggle_button=True).classes('pf-inp w-full mb-4').props('outlined dark')
         pnote  = ui.label('').classes('pf-note-ok')
-
         def chpass():
-            if p_new.value != p_cf.value:
-                pnote.classes(remove='pf-note-ok').classes(add='pf-note-err')
-                pnote.set_text('❌ Mật khẩu mới xác nhận không khớp!'); return
-            if len(p_new.value) < 6:
-                pnote.classes(remove='pf-note-ok').classes(add='pf-note-err')
-                pnote.set_text('❌ Mật khẩu tối thiểu phải từ 6 ký tự!'); return
-            ok = change_password(uname, p_old.value, p_new.value)
-            if ok:
-                pnote.classes(remove='pf-err').classes(add='pf-note-ok')
-                pnote.set_text('✅ Đổi mật khẩu thành công!')
-                p_old.set_value(''); p_new.set_value(''); p_cf.set_value('')
-            else:
-                pnote.classes(remove='pf-note-ok').classes(add='pf-note-err')
-                pnote.set_text('❌ Mật khẩu hiện tại không chính xác!')
-
+            if p_new.value != p_cf.value: pnote.classes(remove='pf-note-ok').classes(add='pf-note-err'); pnote.set_text('❌ Mật khẩu mới xác nhận không khớp!'); return
+            if change_password(uname, p_old.value, p_new.value): pnote.set_text('✅ Đổi mật khẩu thành công!')
+            else: pnote.classes(remove='pf-note-ok').classes(add='pf-note-err'); pnote.set_text('❌ Mật khẩu hiện tại sai!')
         ui.button('Đổi mật khẩu', on_click=chpass).classes('pf-btn-primary').props('unelevated no-caps')
 
 def _history(uname):
     with ui.element('div').classes('pf-card'):
         with ui.row().style('justify-content:space-between;align-items:center;margin-bottom:1.5rem;width:100%'):
             ui.label('Lịch sử truy cập').classes('pf-section-title').style('margin-bottom:0')
-            ui.button('🗑 Xóa tất cả', on_click=lambda: [
-                clear_history(uname),
-                ui.notify('Đã xóa toàn bộ lịch sử truy cập!', type='positive'),
-                ui.navigate.to('/profile?tab=history')
-            ]).classes('pf-btn-danger').props('flat no-caps')
-
+            ui.button('🗑 Xóa tất cả', on_click=lambda: [clear_history(uname), ui.navigate.to('/profile?tab=history')]).classes('pf-btn-danger').props('flat no-caps')
         items = get_history(uname)
-        if not items:
-            ui.label('Chưa có lịch sử truy cập nào được ghi nhận.').classes('pf-empty')
+        if not items: ui.label('Chưa có lịch sử truy cập nào.').classes('pf-empty')
         else:
-            with ui.column().classes('w-full').style('gap:0'):
-                for h in items:
-                    with ui.element('div').classes('pf-row'):
-                        with ui.row().style('align-items:center;gap:0.75rem'):
-                            ui.icon('location_on', size='20px').style('color:#4facfe')
-                            ui.label(h.get('city','')).style('color:#ffffff;font-weight:600;font-size:0.95rem')
-                        ui.label(h.get('time','')).style('color:#a0aec0;font-size:0.8rem')
+            for h in items:
+                with ui.element('div').classes('pf-row'):
+                    with ui.row().style('align-items:center;gap:0.75rem'):
+                        ui.icon('location_on', size='20px').style('color:#4facfe'); ui.label(h.get('city','')).style('color:#ffffff;font-weight:600')
+                    ui.label(h.get('time','')).style('color:#a0aec0;font-size:0.8rem')
 
 def _favorites(uname):
     with ui.element('div').classes('pf-card'):
         ui.label('Thành phố yêu thích').classes('pf-section-title')
-
         favs = get_favorites(uname)
-        if not favs:
-            ui.label('Danh sách thành phố yêu thích của bạn đang trống.').classes('pf-empty')
+        if not favs: ui.label('Danh sách yêu thích đang trống.').classes('pf-empty')
         else:
-            with ui.column().classes('w-full mb-2').style('gap:0'):
-                for city in favs:
-                    with ui.element('div').classes('pf-fav-row'):
-                        with ui.row().style('align-items:center;gap:0.75rem'):
-                            ui.icon('star', size='20px').style('color:#facc15')
-                            ui.label(city).style('color:#ffffff;font-weight:600;font-size:0.95rem')
-                        # Giữ lại nút X để người dùng xóa nhanh thành phố khỏi yêu thích
-                        ui.button(icon='close', on_click=lambda c=city: [
-                            remove_favorite(uname, c),
-                            ui.notify(f'Đã xóa {c} khỏi danh sách yêu thích', type='info'),
-                            ui.navigate.to('/profile?tab=favorites')
-                        ]).props('flat round dense').style('color:#f87171;width:32px;height:32px')
-                        
-        # ĐÃ XOÁ TOÀN BỘ PHẦN INPUT Ô NHẬP VÀ NÚT "+ THÊM" Ở ĐÂY THEO YÊU CẦU CỦA KHOAI
+            for city in favs:
+                with ui.element('div').classes('pf-fav-row'):
+                    with ui.row().style('align-items:center;gap:0.75rem'):
+                        ui.icon('star', size='20px').style('color:#facc15'); ui.label(city).style('color:#ffffff;font-weight:600')
+                    ui.button(icon='close', on_click=lambda c=city: [remove_favorite(uname, c), ui.navigate.to('/profile?tab=favorites')]).props('flat round dense').style('color:#f87171')
+
+# ──────────────────────────── THÔNG BÁO ──────────────────────────────────────
+
+@ui.refreshable
+def notification_list(username: str):
+    """Danh sách lịch sử thông báo, tự động refresh khi gọi .refresh()"""
+    history = get_notification_history(username)
+    if not history:
+        ui.label('Chưa có thông báo nào được ghi nhận.').classes('pf-empty')
+    else:
+        with ui.column().classes('w-full').style('gap:10px'):
+            for msg in history:
+                ui.chat_message(
+                    text=msg['content'],
+                    name='Hệ thống',
+                    stamp=msg['created_at'],
+                    sent=True
+                ).classes('w-full')
+
+def _notifications(uname):
+    # --- Phần cài đặt thông báo hàng ngày ---
+    with ui.element('div').classes('pf-card'):
+        ui.label('Cài đặt thông báo hàng ngày').classes('pf-section-title')
+        notif_settings = get_notifications(uname)
+        daily_switch = ui.switch('Gửi báo cáo thời tiết mỗi ngày', value=notif_settings['daily'])
+        time_input = ui.input('Giờ gửi (HH:MM)', value=notif_settings['daily_time']).props('mask="##:##"')
+        daily_switch.bind_value_to(time_input, 'visible')
+        
+        async def save_notif_settings():
+            new_settings = {
+                'daily': daily_switch.value,
+                'daily_time': time_input.value if daily_switch.value else '07:00',
+                'rain': notif_settings.get('rain', True),
+                'extreme': notif_settings.get('extreme', True),
+            }
+            update_notifications(uname, new_settings)
+            ui.notify('Đã lưu cài đặt thông báo', type='positive', position='top')
+        
+        ui.button('Lưu cài đặt', on_click=save_notif_settings).classes('pf-btn-primary mt-2')
+
+    # --- Phần lịch sử thông báo + real-time + nút test ---
+    with ui.element('div').classes('pf-card'):
+        with ui.row().style('justify-content:space-between;align-items:center;margin-bottom:1rem;width:100%'):
+            ui.label('Lịch sử thông báo').classes('pf-section-title').style('margin-bottom:0')
+            async def clear_history():
+                delete_all_notification_history(uname)
+                notification_list.refresh()
+                ui.notify('Đã xóa toàn bộ lịch sử thông báo', type='positive', position='top')
+            ui.button('🗑 Xóa tất cả', on_click=clear_history).classes('pf-btn-danger').props('flat no-caps')
+        
+        # Nút test thử
+        async def send_test():
+            from datetime import datetime
+            test_content = f"🔔 Thông báo thử lúc {datetime.now().strftime('%H:%M:%S')}"
+            save_notification_history(uname, test_content)
+            # Cập nhật last_seen để client nhận ngay
+            update_last_notification_seen(uname, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            notification_list.refresh()
+            ui.notify("✅ Đã gửi thông báo thử!", type='positive', position='top')
+        ui.button('📨 Gửi thông báo thử', on_click=send_test).classes('pf-btn-primary mt-1').props('flat')
+        
+        # Danh sách refreshable
+        notification_list(uname)
+
+    # --- Timer kiểm tra thông báo mới (real-time notify) ---
+    last_seen = get_last_notification_seen(uname) or datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    async def check_new_notifications():
+        nonlocal last_seen
+        new_msgs = get_new_notifications_since(uname, last_seen)
+        if new_msgs:
+            # Cập nhật last_seen thành thời gian mới nhất
+            latest_time = max(msg['created_at'] for msg in new_msgs)
+            last_seen = latest_time
+            update_last_notification_seen(uname, latest_time)
+            # Hiển thị notify cho từng tin nhắn mới
+            for msg in new_msgs:
+                ui.notify(msg['content'], type='info', position='top', timeout=5000)
+            # Làm mới danh sách lịch sử
+            notification_list.refresh()
+    
+    ui.timer(3, check_new_notifications)

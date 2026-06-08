@@ -1,3 +1,4 @@
+import datetime
 from src.services.weather_api import fetch_air_quality, fetch_current, fetch_forecast, fetch_uv_index
 from src.features.weather.components.charts_daily import create_precip_chart
 from src.common.utils import process_weather_data
@@ -36,7 +37,6 @@ def _enrich_hourly(hourly_data: list, raw_forecast: dict) -> list:
     raw_map = {}
     try:
         for item in raw_forecast.get('list', []):
-            import datetime
             dt = datetime.datetime.fromtimestamp(item['dt'])
             key = dt.strftime('%H:%M')
             raw_map[key] = item

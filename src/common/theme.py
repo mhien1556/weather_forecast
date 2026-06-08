@@ -73,6 +73,9 @@ STYLES = """
     --login-btn-bg: rgba(255, 255, 255, 0.07);
     --login-btn-border: rgba(255, 255, 255, 0.2);
     --login-btn-text: #ffffff;
+
+    --glass-card-bg: rgba(255, 255, 255, 0.10);
+    --glass-card-border: rgba(255, 255, 255, 0.18);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -84,14 +87,14 @@ STYLES = """
     --card-bg-solid: #ffffff;
     --card-border: rgba(0, 0, 0, 0.08);
     --text-primary: #1a1a2e;
-    --text-secondary: rgba(0, 0, 0, 0.55);
-    --text-muted: rgba(0, 0, 0, 0.35);
+    --text-secondary: rgba(0, 0, 0, 0.75); /* Tăng độ tương phản */
+    --text-muted: rgba(0, 0, 0, 0.6);    /* Tăng độ tương phản */
     --danger-text: #dc2626;
     --success-color: #16a34a;
 
     --navbar-bg: rgba(255, 255, 255, 0.95);
     --navbar-text: #1a1a2e;
-    --navbar-text-secondary: rgba(0, 0, 0, 0.5);
+    --navbar-text-secondary: rgba(0, 0, 0, 0.7); /* Tăng độ tương phản cho Light Mode */
     --navbar-border: rgba(0, 0, 0, 0.08);
     --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --navbar-link-hover: #4facfe;
@@ -104,10 +107,10 @@ STYLES = """
     --search-text: #1a1a2e;
 
     --footer-bg: rgba(245, 247, 250, 0.98);
-    --footer-text: rgba(0, 0, 0, 0.6);
-    --footer-text-muted: rgba(0, 0, 0, 0.4);
+    --footer-text: rgba(0, 0, 0, 0.75); /* Tăng độ tương phản */
+    --footer-text-muted: rgba(0, 0, 0, 0.6);    /* Tăng độ tương phản */
     --footer-border: rgba(0, 0, 0, 0.08);
-    --footer-link: rgba(0, 0, 0, 0.5);
+    --footer-link: rgba(0, 0, 0, 0.7); /* Tăng độ tương phản cho Light Mode */
     --footer-heading: #1a1a2e;
 
     --menu-bg: rgba(255, 255, 255, 0.98);
@@ -125,7 +128,7 @@ STYLES = """
     --input-bg: rgba(0, 0, 0, 0.03);
     --input-text: #1a1a2e;
 
-    --metric-label: rgba(0, 0, 0, 0.45);
+    --metric-label: rgba(0, 0, 0, 0.65); /* Tăng độ tương phản */
 
     --hero-overlay-start: rgba(244, 246, 249, 0.1);
     --hero-overlay-end: rgba(244, 246, 249, 0.95);
@@ -136,6 +139,52 @@ STYLES = """
     --login-btn-bg: rgba(0, 0, 0, 0.05);
     --login-btn-border: rgba(0, 0, 0, 0.15);
     --login-btn-text: #1a1a2e;
+
+    --glass-card-bg: rgba(255, 255, 255, 0.70);
+    --glass-card-border: rgba(0, 0, 0, 0.10);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT MODE — Quasar component overrides (Quasar tự thêm màu riêng, cần force)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.body--light .q-field__native,
+.body--light .q-field__label,
+.body--light .q-field__marginal,
+.body--light .q-item,
+.body--light .q-item__label,
+.body--light .q-item__section,
+.body--light .q-radio__label,
+.body--light .q-checkbox__label,
+.body--light .q-toggle__label,
+.body--light .q-option-group,
+.body--light label,
+.body--light .q-label,
+.body--light .q-card,
+.body--light .q-card * {
+    color: var(--text-primary) !important;
+}
+.body--light .q-separator {
+    background: rgba(0, 0, 0, 0.10) !important;
+}
+.body--light .q-btn.q-btn--flat .q-icon,
+.body--light .icon-btn-round .q-icon {
+    color: var(--icon-btn-color) !important;
+}
+/* Quasar switch/toggle track trên light mode */
+.body--light .q-toggle__track { opacity: 0.5; }
+/* Navbar icon buttons trên light mode không bị trắng chữ */
+.body--light .navbar .q-icon { color: var(--icon-btn-color) !important; }
+/* Input text trong search bar */
+.body--light .city-search-bar input,
+.body--light .q-input .q-field__native {
+    color: var(--search-text) !important;
+}
+/* Đảm bảo text trong hero section đọc được trên light */
+.body--light .temp-value,
+.body--light .location-header h1,
+.body--light .date-time,
+.body--light .condition-info {
+    text-shadow: 0 1px 8px rgba(0,0,0,0.18);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -157,9 +206,43 @@ html, body, .nicegui-content, .q-layout, .q-page, .q-page-container, #app {
     color: var(--text-primary) !important;
 }
 
-.q-field__native, .q-field__label, .q-btn, .q-item__label {
+/* ── Quasar text elements — buộc dùng CSS variable, không để Quasar tự set ── */
+.q-field__native, .q-field__label, .q-field__marginal,
+.q-item, .q-item__label, .q-item__section,
+.q-radio__label, .q-checkbox__label,
+.q-toggle__label, .q-option-group,
+.q-select__dropdown-icon,
+label, .q-label {
     color: var(--text-primary) !important;
 }
+
+/* Input placeholder */
+.q-field__native::placeholder,
+input::placeholder {
+    color: var(--text-secondary) !important;
+    opacity: 1 !important;
+}
+
+/* Chỉ override màu chữ button flat/outline, không override unelevated/filled */
+.q-btn.q-btn--flat, .q-btn.q-btn--outline {
+    color: var(--text-primary) !important;
+}
+
+/* Icon trong các button flat thường (settings, search...) */
+.icon-btn-round .q-icon,
+.q-btn.q-btn--flat .q-icon {
+    color: var(--icon-btn-color) !important;
+}
+
+/* Separator */
+.q-separator { background: var(--separator-color) !important; }
+
+/* Menu/popup items */
+.q-menu { background: var(--menu-bg) !important; border: 1px solid var(--menu-border) !important; }
+.q-item:hover { background: var(--menu-hover) !important; }
+
+/* Switch thumb color */
+.q-toggle__inner--truthy { color: var(--accent-color) !important; }
 
 a, .q-link { color: inherit !important; }
 
@@ -169,27 +252,19 @@ a, .q-link { color: inherit !important; }
     transition: background-color 0.3s ease;
 }
 
-/* ── Hero Background ── */
-@keyframes slowDrift {
-    0% { transform: scale(1) translate(0px, 0px); }
-    50% { transform: scale(1.05) translate(-1%, 1%); }
-    100% { transform: scale(1) translate(0px, 0px); }
-}
-
 .hero-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
     z-index: 0; pointer-events: none;
-    background-image: url('/static/images/sunny.png');
-    background-size: cover; background-position: center; background-repeat: no-repeat;
-    transition: background-image 1s ease-in-out;
-    animation: slowDrift 30s ease-in-out infinite;
-    transform-origin: center center;
-    will-change: transform;
+    background: var(--primary-bg);
+    overflow: hidden;
 }
-.hero-bg.rain { background-image: url('/static/images/rainy.png'); }
 .hero-bg .overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(to bottom, var(--hero-overlay-start) 0%, var(--hero-overlay-end) 100%);
+    background: 
+        radial-gradient(circle at 20% 20%, var(--accent-color), transparent 40%),
+        radial-gradient(circle at 80% 80%, var(--accent-color), transparent 40%),
+        linear-gradient(to bottom, var(--hero-overlay-start) 0%, var(--hero-overlay-end) 100%);
+    opacity: 0.4;
     transition: background 0.5s ease;
 }
 
@@ -202,7 +277,7 @@ div { box-sizing: border-box; }
 .navbar {
     display: flex !important; justify-content: space-between; align-items: center;
     padding: 0.75rem 1.5rem; /* horizontal padding for inner content */
-    background: #000 !important; /* solid black */
+    background: var(--navbar-bg) !important;
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--navbar-border) !important;
     position: sticky; top: 0; z-index: 1000;
@@ -334,7 +409,7 @@ div { box-sizing: border-box; }
    ══════════════════════════════════════════════════════════════════════════════ */
 .app-footer {
     position: relative; margin-top: 6rem; padding: 4rem 1.5rem 3rem; /* vertical padding with horizontal inset */
-    background: #000 !important; /* solid black */ backdrop-filter: blur(20px);
+    background: var(--footer-bg) !important; backdrop-filter: blur(20px);
     border-top: 1px solid var(--footer-border) !important; z-index: 1;
     transition: background 0.3s ease, border-color 0.3s ease;
     width: 100% !important; max-width: 100% !important;
@@ -412,11 +487,11 @@ div { box-sizing: border-box; }
     gap: 1rem; margin-bottom: 2rem; width: 100%;
 }
 .metric-card {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--glass-card-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-card-border);
     padding: 1.25rem 1rem;
     display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
     color: var(--text-primary);
@@ -430,11 +505,11 @@ div { box-sizing: border-box; }
 
 /* ── Cards ── */
 .card {
-    background: rgba(255, 255, 255, 0.15); /* Màu nền: Trắng với độ trong suốt 15% */
+    background: var(--glass-card-bg);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px); /* Hỗ trợ Safari */
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-card-border);
 }
 .card h2 { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; margin: 0 0 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
 
@@ -490,11 +565,11 @@ div { box-sizing: border-box; }
 /* ── Forecast Detail Cards ── */
 .daily-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
 .detail-forecast-card {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--glass-card-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-card-border);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;

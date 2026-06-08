@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import requests
 
 WEEKDAY_VI = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
@@ -55,20 +55,52 @@ def aqi_info(aqi_val):
         'color': '#f87171',
     }
 
+def get_weather_color(icon_code):
+    """Trả về mã màu hex đồng bộ theo icon code của OpenWeatherMap."""
+    if not icon_code:
+        return '#4facfe'
+    
+    # Hỗ trợ cả tên icon đã map (sunny, rainy...) và mã OWM (01d, 02n...)
+    name_map = {
+        'sunny': '#fbbf24', 'partly_cloudy_day': '#fcd34d', 
+        'cloud': '#94a3b8', 'rainy': '#3b82f6', 
+        'thunderstorm': '#a78bfa', 'ac_unit': '#93c5fd', 'mist': '#cbd5e1'
+    }
+    if icon_code in name_map:
+        return name_map[icon_code]
 
-def format_time(ts):
+    code = icon_code[:2]
+    mapping = {
+        '01': '#fbbf24', # Nắng (Vàng cam)
+        '02': '#fcd34d', # Ít mây (Vàng nhạt)
+        '03': '#94a3b8', # Nhiều mây (Xám xanh)
+        '04': '#64748b', # Mây u ám (Xám đậm)
+        '09': '#60a5fa', # Mưa phùn (Xanh nhạt)
+        '10': '#3b82f6', # Mưa (Xanh dương)
+        '11': '#a78bfa', # Dông (Tím)
+        '13': '#93c5fd', # Tuyết (Xanh trắng)
+        '50': '#cbd5e1', # Sương mù (Xám nhạt)
+    }
+    return mapping.get(code, '#4facfe')
+
+def format_time(ts, tz_offset=0):
     if not ts:
         return '--:--'
-    return datetime.fromtimestamp(ts).strftime('%H:%M')
+    # Chuyển đổi timestamp sang đối tượng datetime có múi giờ địa phương
+    dt = datetime.fromtimestamp(ts, timezone(timedelta(seconds=tz_offset)))
+    return dt.strftime('%H:%M')
 
 
-def parse_daily(forecast_list):
+def parse_daily(forecast_list, tz_offset=0):
     if not forecast_list:
         return []
 
     by_date = {}
     for item in forecast_list:
-        date = item['dt_txt'].split(' ')[0]
+        # Chuyển đổi timestamp sang ngày địa phương để group dữ liệu chính xác
+        dt_local = datetime.fromtimestamp(item['dt'], timezone(timedelta(seconds=tz_offset)))
+        date = dt_local.strftime('%Y-%m-%d')
+
         if date not in by_date:
             by_date[date] = {
                 'date': date,
@@ -120,14 +152,14 @@ def parse_daily(forecast_list):
     return result
 
 
-def parse_hourly(forecast_list, limit=8):
+def parse_hourly(forecast_list, limit=8, tz_offset=0):
     if not forecast_list:
         return []
     result = []
-    from datetime import datetime as _dt
     for item in forecast_list[:limit]:
-        dt_obj = _dt.strptime(item['dt_txt'], '%Y-%m-%d %H:%M:%S')
-        time_str = dt_obj.strftime('%H:%M')
+        # Chuyển đổi timestamp sang giờ địa phương
+        dt_local = datetime.fromtimestamp(item['dt'], timezone(timedelta(seconds=tz_offset)))
+        time_str = dt_local.strftime('%H:%M')
         result.append({
             'time': time_str,
             'temp': round(item['main']['temp']),
@@ -139,10 +171,11 @@ def parse_hourly(forecast_list, limit=8):
     return result
 
 
-def get_current_date_vi():
-    now = datetime.now()
-    day = WEEKDAY_VI[(now.weekday() + 1) % 7]
-    return f'{day}, {now.day} Tháng {now.month} • {now.strftime("%H:%M")}'
+def get_current_date_vi(tz_offset=0):
+    # Lấy thời gian hiện tại theo múi giờ của thành phố đang xem
+    now_local = datetime.now(timezone(timedelta(seconds=tz_offset)))
+    day = WEEKDAY_VI[(now_local.weekday() + 1) % 7]
+    return f'{day}, {now_local.day} Tháng {now_local.month} • {now_local.strftime("%H:%M")}'
 
 
 def process_weather_data(data):
@@ -152,6 +185,9 @@ def process_weather_data(data):
     current = data['current']
     forecast = data.get('forecast', {})
     aqi = data.get('air_quality', {})
+    
+    # Lấy độ lệch múi giờ (giây) từ API
+    tz_offset = current.get('timezone', 0)
 
     processed_aqi = None
     if aqi and 'list' in aqi and len(aqi['list']) > 0:
@@ -169,8 +205,8 @@ def process_weather_data(data):
             'co_pct': min((aqi_item['components']['co'] / 15000) * 100, 100),
         }
 
-    daily = parse_daily(forecast.get('list', []))
-    hourly = parse_hourly(forecast.get('list', []), 8)
+    daily = parse_daily(forecast.get('list', []), tz_offset)
+    hourly = parse_hourly(forecast.get('list', []), 8, tz_offset)
 
     stats = {}
     if daily:
@@ -198,8 +234,8 @@ def process_weather_data(data):
         'pressure': current['main']['pressure'],
         'visibility': round(current.get('visibility', 0) / 1000, 1),
         'dew_point': round(current['main']['temp'] - (100 - current['main']['humidity']) / 5),
-        'sunrise': format_time(current['sys'].get('sunrise')),
-        'sunset': format_time(current['sys'].get('sunset')),
+        'sunrise': format_time(current['sys'].get('sunrise'), tz_offset),
+        'sunset': format_time(current['sys'].get('sunset'), tz_offset),
         'icon': icon,
         'lucide_icon': icon_to_lucide(icon),
         'uv_index': round(data.get('uv_index', 0), 1) if data.get('uv_index') is not None else None,
@@ -207,7 +243,7 @@ def process_weather_data(data):
         'daily': daily,
         'hourly': hourly,
         'stats': stats,
-        'date_str': get_current_date_vi(),
+        'date_str': get_current_date_vi(tz_offset),
         'lat': data.get('lat'),
         'lon': data.get('lon'),
     }

@@ -17,24 +17,27 @@ def create_hourly_chart(hourly_data):
     if not hourly_data:
         return None
 
-    # Build lookup time → data
+    # Helper đổi giờ thành phút để tính toán khoảng cách
+    def to_min(t_str):
+        try:
+            h, m = map(int, t_str.split(':'))
+            return h * 60 + m
+        except: return 0
+
+    # Ánh xạ dữ liệu API (thường lệch giờ) về các mốc cố định: 0:00, 3:00... 23:59
     lookup = {}
-    for h in hourly_data:
-        lookup[h.get('time', '')] = h
+    for slot in _HOUR_ORDER:
+        slot_min = to_min(slot)
+        best_h, min_diff = None, 1440
+        for h in hourly_data:
+            diff = abs(slot_min - to_min(h.get('time', '')))
+            if diff < min_diff:
+                min_diff = diff
+                best_h = h
+        if best_h:
+            lookup[slot] = best_h
 
-    # Thêm 23:59 nếu chưa có
-    if '23:59' not in lookup and hourly_data:
-        lookup['23:59'] = hourly_data[-1]
-
-    # Sắp xếp theo _HOUR_ORDER, bỏ giờ không có data
     ordered = [t for t in _HOUR_ORDER if t in lookup]
-    if not ordered:
-        def to_min(t):
-            try:
-                h, m = t.split(':'); return int(h) * 60 + int(m)
-            except Exception:
-                return 9999
-        ordered = sorted(lookup.keys(), key=to_min)
 
     times = ordered
     pop   = [_normalize_pop(lookup[t].get('pop', 0)) for t in times]
